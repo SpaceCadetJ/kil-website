@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Intelligence Lab — Cognitive Robotics at the University of Arkansas</title>
+<meta name="description" content="KIL develops intelligent actuator controllers, open-source FOC firmware, and sim-to-real training pipelines for quasi-direct-drive robotic systems.">
+<meta name="keywords" content="motor controller, FOC, field-oriented control, robotics, quasi-direct-drive, QDD, bipedal robot, STM32, BLDC, KIL">
+<meta name="author" content="Kinetic Intelligence Lab">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================
+   CSS CUSTOM PROPERTIES
+   =================================================================== */
+:root {
+  --bg-primary: #05070b;
+  --bg-secondary: #0a0e14;
+  --bg-tertiary: #0f1319;
+  --bg-card: #0c1017;
+  --bg-card-hover: #10151d;
+  --border-subtle: rgba(6, 182, 212, 0.08);
+  --border-hover: rgba(6, 182, 212, 0.2);
+  --border-glow: rgba(6, 182, 212, 0.35);
+  --cyan: #06b6d4;
+  --cyan-dim: #0891b2;
+  --cyan-glow: rgba(6, 182, 212, 0.15);
+  --cyan-bright: #22d3ee;
+  --amber: #f59e0b;
+  --amber-dim: #d97706;
+  --amber-glow: rgba(245, 158, 11, 0.12);
+  --green: #22c55e;
+  --green-dim: #16a34a;
+  --green-glow: rgba(34, 197, 94, 0.12);
+  --red: #ef4444;
+  --text-primary: #e8edf5;
+  --text-secondary: #8b95a8;
+  --text-tertiary: #5a6478;
+  --text-dim: #3d4554;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --nav-height: 64px;
+  --section-gap: 120px;
+  --max-width: 1200px;
+}
+
+/* ===================================================================
+   RESET & BASE
+   =================================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  font-size: 16px;
+}
+a { color: var(--cyan); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--cyan-bright); }
+img { max-width: 100%; height: auto; }
+::selection { background: rgba(6, 182, 212, 0.3); color: #fff; }
+
+/* ===================================================================
+   TYPOGRAPHY
+   =================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+h1 { font-size: clamp(2.5rem, 6vw, 4.2rem); font-weight: 700; }
+h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 0.6em; }
+h3 { font-size: clamp(1.2rem, 2.5vw, 1.5rem); margin-bottom: 0.5em; }
+.mono { font-family: var(--font-mono); }
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.label--amber { color: var(--amber); }
+.label--green { color: var(--green); }
+.label--dim { color: var(--text-tertiary); }
+.text-secondary { color: var(--text-secondary); }
+.text-dim { color: var(--text-tertiary); }
+.text-cyan { color: var(--cyan); }
+
+/* ===================================================================
+   LAYOUT
+   =================================================================== */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.section {
+  padding: var(--section-gap) 0;
+  position: relative;
+}
+.section--alt { background: var(--bg-secondary); }
+.section__header {
+  margin-bottom: 64px;
+  max-width: 680px;
+}
+.section__header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-top: 16px;
+  line-height: 1.7;
+}
+
+/* ===================================================================
+   NAVIGATION
+   =================================================================== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
+  border-bottom: 1px solid transparent;
+}
+.nav.scrolled {
+  background: rgba(5, 7, 11, 0.82);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom-color: var(--border-subtle);
+}
+.nav__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.nav__logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--bg-primary);
+}
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav__links a {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav__links a:hover { color: var(--text-primary); }
+.nav__cta {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  color: var(--cyan) !important;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  transition: all 0.25s var(--ease-smooth) !important;
+}
+.nav__cta:hover {
+  background: rgba(6, 182, 212, 0.18) !important;
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  color: var(--cyan-bright) !important;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+}
+.nav__mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+.nav__mobile-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-secondary);
+  margin: 5px 0;
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+
+/* ===================================================================
+   HERO
+   =================================================================== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding-top: var(--nav-height);
+}
+.hero__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+.hero__gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, var(--bg-primary), transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+.hero__content {
+  position: relative;
+  z-index: 2;
+  max-width: 740px;
+  padding: 80px 0;
+}
+.hero__tag {
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.hero__title {
+  margin-bottom: 24px;
+}
+.hero__title .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s var(--ease-out-expo);
+}
+.hero__title .word.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero__subtitle {
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 40px;
+  max-width: 600px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.hero__actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s var(--ease-smooth);
+}
+.btn--primary {
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+  color: var(--bg-primary);
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+}
+.btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.45);
+  color: var(--bg-primary);
+}
+.btn--secondary {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
+.btn--secondary:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  color: var(--text-primary);
+}
+.btn__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ===================================================================
+   SCROLL REVEAL
+   =================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+}
+.reveal-stagger.visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger.visible > *:nth-child(1) { transition-delay: 0ms; }
+.reveal-stagger.visible > *:nth-child(2) { transition-delay: 100ms; }
+.reveal-stagger.visible > *:nth-child(3) { transition-delay: 200ms; }
+.reveal-stagger.visible > *:nth-child(4) { transition-delay: 300ms; }
+.reveal-stagger.visible > *:nth-child(5) { transition-delay: 400ms; }
+.reveal-stagger.visible > *:nth-child(6) { transition-delay: 500ms; }
+
+/* ===================================================================
+   PILLAR CARDS (What We Build)
+   =================================================================== */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.pillar-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 36px 30px;
+  transition: all 0.4s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+.pillar-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 30%, var(--cyan) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.pillar-card:hover {
+  transform: translateY(-6px);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px var(--cyan-glow);
+}
+.pillar-card:hover::before { opacity: 1; }
+.pillar-card__icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  font-size: 1.3rem;
+  transition: all 0.35s;
+}
+.pillar-card:hover .pillar-card__icon {
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 20px var(--cyan-glow);
+}
+.pillar-card__title {
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.pillar-card__text {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+.pillar-card__tag {
+  display: inline-block;
+  margin-top: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ===================================================================
+   BOARD SECTION
+   =================================================================== */
+.board-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+.board-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 480px;
+}
+.board-svg-wrap {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  transition: transform 0.15s ease-out;
+}
+.board-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 20px 60px rgba(0,0,0,0.5)) drop-shadow(0 0 40px rgba(6, 182, 212, 0.06));
+}
+.board-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  animation: boardPulse 4s ease-in-out infinite;
+}
+@keyframes boardPulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+@keyframes boardFloat {
+  0%, 100% { transform: translateY(0) rotateX(2deg) rotateY(-1deg); }
+  50% { transform: translateY(-8px) rotateX(-1deg) rotateY(2deg); }
+}
+.board-svg-wrap {
+  animation: boardFloat 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+/* Spec grid */
+.board-specs { display: flex; flex-direction: column; gap: 20px; }
+.board-specs__title { margin-bottom: 8px; }
+.board-specs__subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 32px;
+  line-height: 1.7;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+.stat-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.stat-card__value {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--cyan);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card__value .counter-suffix {
+  font-size: 0.7em;
+  color: var(--cyan-dim);
+  font-weight: 400;
+  margin-left: 2px;
+}
+.stat-card__label {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Spec list */
+.spec-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.spec-list li {
+  display: flex;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.spec-list li:last-child { border-bottom: none; }
+.spec-list__key {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  min-width: 100px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.spec-list__val { color: var(--text-primary); font-weight: 500; }
+
+/* ===================================================================
+   AAI SECTION
+   =================================================================== */
+.aai-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.aai-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 28px 24px;
+  transition: all 0.4s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+.aai-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 40%, var(--amber) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.aai-card:hover {
+  transform: translateY(-6px);
+  background: var(--bg-card-hover);
+  border-color: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px var(--amber-glow);
+}
+.aai-card:hover::before { opacity: 1; }
+.aai-card__num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.aai-card__title {
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.aai-card__text {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* AAI Architecture diagram */
+.aai-diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 40px;
+  overflow-x: auto;
+}
+.aai-diagram__title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.aai-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  min-width: 700px;
+}
+.aai-flow__node {
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--cyan);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.aai-flow__node--highlight {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: var(--amber);
+}
+.aai-flow__arrow {
+  width: 32px;
+  height: 2px;
+  background: rgba(6, 182, 212, 0.2);
+  position: relative;
+  flex-shrink: 0;
+}
+.aai-flow__arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 6px solid rgba(6, 182, 212, 0.3);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+.aai-flow__branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+.aai-flow__branch-line {
+  width: 2px;
+  height: 20px;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* ===================================================================
+   PIPELINE
+   =================================================================== */
+.pipeline-flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 20px 0 40px;
+  position: relative;
+}
+.pipeline-step {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-expo);
+}
+.pipeline-flow.visible .pipeline-step { opacity: 1; transform: translateY(0); }
+.pipeline-flow.visible .pipeline-step:nth-child(1) { transition-delay: 0ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(2) { transition-delay: 150ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(3) { transition-delay: 300ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(4) { transition-delay: 450ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(5) { transition-delay: 600ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(6) { transition-delay: 750ms; }
+.pipeline-step__icon {
+  width: 56px;
+  height: 56px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 2;
+  transition: all 0.35s;
+}
+.pipeline-step:hover .pipeline-step__icon {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 20px var(--cyan-glow);
+  transform: translateY(-4px);
+}
+.pipeline-step__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.pipeline-step__desc {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  max-width: 150px;
+  line-height: 1.5;
+}
+/* Connector lines between steps */
+.pipeline-connector {
+  flex-shrink: 0;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 28px;
+}
+.pipeline-connector__line {
+  width: 100%;
+  height: 2px;
+  background: var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+.pipeline-connector__line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--cyan);
+  transition: width 1s var(--ease-out-expo);
+}
+.pipeline-flow.visible .pipeline-connector__line::after {
+  width: 100%;
+}
+.pipeline-flow.visible .pipeline-step:nth-child(1) ~ .pipeline-connector .pipeline-connector__line::after { transition-delay: 100ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(2) ~ .pipeline-connector .pipeline-connector__line::after { transition-delay: 250ms; }
+.pipeline-flow.visible .pipeline-step:nth-child(3) ~ .pipeline-connector .pipeline-connector__line::after { transition-delay: 400ms; }
+
+/* TITAN platform card */
+.titan-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 36px;
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+.titan-card__specs {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.titan-card__specs li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+.titan-card__specs li::before {
+  content: '›';
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.titan-card__cost {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  color: var(--green);
+  margin-top: 16px;
+}
+.titan-card__cost span {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ===================================================================
+   RESOURCES
+   =================================================================== */
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.resource-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 28px 24px;
+  transition: all 0.35s var(--ease-smooth);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.resource-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+}
+.resource-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.resource-card__title .icon { font-size: 1.2rem; }
+.resource-card__text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.resource-card__link {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--cyan);
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.resource-card__link::after { content: '→'; transition: transform 0.2s; }
+.resource-card:hover .resource-card__link::after { transform: translateX(4px); }
+
+/* Papers */
+.papers {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.papers li {
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  transition: all 0.25s;
+}
+.papers li:hover {
+  border-color: var(--border-hover);
+  background: rgba(6, 182, 212, 0.03);
+}
+.papers li strong { color: var(--text-primary); font-weight: 600; }
+.papers__venue {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  display: block;
+  margin-top: 4px;
+}
+
+/* ===================================================================
+   ROADMAP, TEAM, CTA
+   =================================================================== */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 64px;
+}
+.roadmap-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 28px 24px;
+}
+.roadmap-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.roadmap-item__title { font-size: 1rem; font-weight: 600; }
+.roadmap-item__pct {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.roadmap-item__pct--high { color: var(--green); }
+.roadmap-item__pct--mid { color: var(--amber); }
+.roadmap-item__pct--low { color: var(--text-tertiary); }
+.roadmap-item__text {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.roadmap-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.roadmap-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  width: 0%;
+  transition: width 1.4s var(--ease-out-expo);
+}
+.roadmap-bar__fill--green { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+.roadmap-bar__fill--amber { background: linear-gradient(90deg, var(--amber-dim), var(--amber)); }
+.roadmap-bar__fill--dim { background: rgba(255,255,255,0.1); }
+
+/* Team */
+.team-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+  margin-bottom: 64px;
+}
+.team-profile {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 36px;
+}
+.team-profile__name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.team-profile__role {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--cyan);
+  letter-spacing: 0.04em;
+  margin-bottom: 20px;
+}
+.team-profile__bio {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.team-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.team-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+.team-advisors { display: flex; flex-direction: column; gap: 20px; }
+.advisor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 24px;
+}
+.advisor-card__name { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+.advisor-card__dept {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+.advisor-card__focus {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Contact CTA */
+.cta-box {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.06), rgba(6, 182, 212, 0.02));
+  border: 1px solid rgba(6, 182, 212, 0.12);
+  border-radius: 20px;
+  padding: 48px;
+  text-align: center;
+}
+.cta-box h3 {
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+.cta-box p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 28px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cta-box__email {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--cyan);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+.cta-box__email:hover {
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: var(--cyan-bright);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+}
+
+/* ===================================================================
+   FOOTER
+   =================================================================== */
+.footer {
+  padding: 32px 0;
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+}
+.footer__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer__copy {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+.footer__links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+.footer__links a {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  transition: color 0.2s;
+}
+.footer__links a:hover { color: var(--text-secondary); }
+
+/* ===================================================================
+   DIVIDER
+   =================================================================== */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+/* ===================================================================
+   MOBILE RESPONSIVE
+   =================================================================== */
+@media (max-width: 1024px) {
+  .board-section { grid-template-columns: 1fr; }
+  .board-visual { min-height: 360px; }
+  .board-svg-wrap { width: 340px; height: 340px; }
+  .titan-card { grid-template-columns: 1fr; }
+  .team-section { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  :root { --section-gap: 80px; --nav-height: 56px; }
+  .pillars { grid-template-columns: 1fr; }
+  .aai-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .resources-grid { grid-template-columns: 1fr; }
+  .roadmap-grid { grid-template-columns: 1fr; }
+  .pipeline-flow { flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .pipeline-connector { width: 24px; }
+  .nav__links { display: none; }
+  .nav__links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    background: rgba(5, 7, 11, 0.96);
+    backdrop-filter: blur(20px);
+    padding: 24px;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .nav__mobile-toggle { display: block; }
+  .hero__content { padding: 40px 0; }
+  .board-svg-wrap { width: 280px; height: 280px; }
+  .cta-box { padding: 32px 20px; }
+  .aai-flow { min-width: auto; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .aai-flow__arrow { width: 20px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .hero__actions { flex-direction: column; }
+  .btn { justify-content: center; }
+}
+
+/* ===================================================================
+   PRINT
+   =================================================================== */
+@media print {
+  .nav, .hero__canvas, .board-glow, .footer { display: none; }
+  body { background: #fff; color: #111; }
+  .section { padding: 32px 0; }
+  .pillar-card, .aai-card, .stat-card, .resource-card, .roadmap-item, .advisor-card, .team-profile {
+    border: 1px solid #ccc;
+    background: #fff;
+    box-shadow: none;
+  }
+  a { color: #0066cc; }
+  .label { color: #555; }
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     NAVIGATION
+     ================================================================ -->
+<nav class="nav" id="nav">
+  <div class="nav__inner">
+    <a href="#" class="nav__brand">
+      <div class="nav__logo">K</div>
+      Kinetic Intelligence Lab
+    </a>
+    <ul class="nav__links" id="navLinks">
+      <li><a href="#build">What We Build</a></li>
+      <li><a href="#titan">TITAN_FOC</a></li>
+      <li><a href="#aai">Research</a></li>
+      <li><a href="#pipeline">Pipeline</a></li>
+      <li><a href="#resources">Resources</a></li>
+      <li><a href="https://github.com/SpaceCadetJ/Kinetic-Intelligence-Lab" target="_blank" rel="noopener" class="nav__cta">GitHub</a></li>
+    </ul>
+    <button class="nav__mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ================================================================
+     HERO
+     ================================================================ -->
+<section class="hero" id="hero">
+  <canvas class="hero__canvas" id="heroCanvas"></canvas>
+  <div class="hero__gradient"></div>
+  <div class="container hero__content">
+    <div class="hero__tag label">Cognitive Robotics Lab &mdash; University of Arkansas</div>
+    <h1 class="hero__title" id="heroTitle">Building the nervous system for legged robots</h1>
+    <p class="hero__subtitle">KIL develops intelligent actuator controllers, open-source motor control firmware, and sim-to-real training pipelines for quasi-direct-drive robotic systems.</p>
+    <div class="hero__actions">
+      <a href="#titan" class="btn btn--primary">
+        Explore TITAN
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+      </a>
+      <a href="https://github.com/SpaceCadetJ/Kinetic-Intelligence-Lab" target="_blank" rel="noopener" class="btn btn--secondary">
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     WHAT WE BUILD
+     ================================================================ -->
+<section class="section" id="build">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label">What We Build</span>
+      <h2>Three pillars of intelligent actuation</h2>
+      <p>From custom silicon to trained locomotion policies, KIL owns the full stack &mdash; hardware, firmware, simulation, and deployment.</p>
+    </div>
+    <div class="pillars reveal-stagger">
+      <div class="pillar-card">
+        <div class="pillar-card__icon">&#9881;</div>
+        <h3 class="pillar-card__title">Intelligent Hardware</h3>
+        <p class="pillar-card__text">TITAN_FOC &mdash; a 65.7mm circular motor controller with 229 components, 6-layer PCB, STM32G474 + DRV8353FS, running FOC at 20&thinsp;kHz with on-device learned compensation.</p>
+        <span class="pillar-card__tag">STM32 &middot; DRV8353FS &middot; 6-layer PCB</span>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-card__icon">&#9000;</div>
+        <h3 class="pillar-card__title">Open-Source Stack</h3>
+        <p class="pillar-card__text">Complete FOC firmware: torque, velocity, position, and impedance control. CAN-FD protocol, digital twin telemetry, MIT Cheetah-compatible impedance commands. All open-source.</p>
+        <span class="pillar-card__tag">FOC &middot; CAN-FD &middot; Impedance Ctrl</span>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-card__icon">&#9881;</div>
+        <h3 class="pillar-card__title">Sim-to-Real Pipeline</h3>
+        <p class="pillar-card__text">Isaac Gym training &rarr; MuJoCo validation &rarr; hardware deployment with calibrated actuator models. Closing the gap at the actuator level, not the policy level.</p>
+        <span class="pillar-card__tag">Isaac Gym &middot; MuJoCo &middot; CAN Deploy</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ================================================================
+     TITAN_FOC — THE BOARD
+     ================================================================ -->
+<section class="section section--alt" id="titan">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label">Flagship Controller</span>
+      <h2>TITAN_FOC</h2>
+      <p>A research-grade quasi-direct-drive motor controller designed for bipedal locomotion. Every component chosen for a reason.</p>
+    </div>
+    <div class="board-section">
+      <div class="board-visual reveal">
+        <div class="board-glow"></div>
+        <div class="board-svg-wrap" id="boardWrap">
+          <!-- Realistic PCB render -->
+          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" id="boardSvg">
+            <defs>
+              <!-- FR4 texture pattern -->
+              <pattern id="fr4Texture" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+                <rect width="4" height="4" fill="#0a1a0a"/>
+                <rect x="0" y="0" width="1" height="1" fill="#0c1c0c" opacity="0.5"/>
+                <rect x="2" y="2" width="1" height="1" fill="#081808" opacity="0.5"/>
+              </pattern>
+              <!-- Solder mask -->
+              <radialGradient id="boardGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#0e220e"/>
+                <stop offset="85%" stop-color="#0a1a0a"/>
+                <stop offset="100%" stop-color="#071407"/>
+              </radialGradient>
+              <!-- Copper fill gradient -->
+              <linearGradient id="copperGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#8b6914"/>
+                <stop offset="100%" stop-color="#6d5310"/>
+              </linearGradient>
+              <!-- Component body gradient -->
+              <linearGradient id="icBody" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1a1a1a"/>
+                <stop offset="100%" stop-color="#111111"/>
+              </linearGradient>
+              <!-- Via gradient -->
+              <radialGradient id="viaGrad" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#c9a84c"/>
+                <stop offset="60%" stop-color="#8b6914"/>
+                <stop offset="100%" stop-color="#0a1a0a"/>
+              </radialGradient>
+              <!-- Board edge shadow -->
+              <filter id="boardShadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+              </filter>
+              <clipPath id="boardClip">
+                <circle cx="200" cy="200" r="180"/>
+              </clipPath>
+            </defs>
+
+            <!-- Board substrate (circular) -->
+            <circle cx="200" cy="200" r="182" fill="#050f05" stroke="#1a5a2a" stroke-width="1.5" filter="url(#boardShadow)"/>
+            <circle cx="200" cy="200" r="180" fill="url(#boardGrad)" clip-path="url(#boardClip)"/>
+            <circle cx="200" cy="200" r="180" fill="url(#fr4Texture)" opacity="0.4" clip-path="url(#boardClip)"/>
+
+            <!-- Edge cuts ring -->
+            <circle cx="200" cy="200" r="180" fill="none" stroke="#2a6a2a" stroke-width="0.8"/>
+            <circle cx="200" cy="200" r="178" fill="none" stroke="#1a5a2a" stroke-width="0.3"/>
+
+            <!-- Mounting holes -->
+            <g class="mounting-holes">
+              <circle cx="200" cy="30" r="6" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.2"/>
+              <circle cx="200" cy="30" r="3" fill="#1a1a1a"/>
+              <circle cx="200" cy="370" r="6" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.2"/>
+              <circle cx="200" cy="370" r="3" fill="#1a1a1a"/>
+              <circle cx="30" cy="200" r="6" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.2"/>
+              <circle cx="30" cy="200" r="3" fill="#1a1a1a"/>
+              <circle cx="370" cy="200" r="6" fill="#0a0a0a" stroke="#c9a84c" stroke-width="1.2"/>
+              <circle cx="370" cy="200" r="3" fill="#1a1a1a"/>
+            </g>
+
+            <!-- Ground plane copper fills (visible through mask openings) -->
+            <g opacity="0.12" clip-path="url(#boardClip)">
+              <rect x="40" y="60" width="320" height="280" fill="#1a5a2a" rx="4"/>
+            </g>
+
+            <!-- ========== POWER STAGE — MOSFET PAIRS (3 phases around perimeter) ========== -->
+            <!-- Phase A — top left -->
+            <g transform="translate(85, 80)">
+              <!-- Copper pour area -->
+              <rect x="-8" y="-6" width="56" height="42" rx="3" fill="#1a3a1a" opacity="0.3"/>
+              <!-- High-side FET -->
+              <rect x="0" y="0" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="2" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="5" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="8" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="11" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="3" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <!-- Low-side FET -->
+              <rect x="0" y="18" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="20" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="23" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="26" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="29" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="21" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <!-- Shunt resistor -->
+              <rect x="30" y="22" width="10" height="5" rx="0.5" fill="#1a1a1a" stroke="#555" stroke-width="0.4"/>
+              <!-- Phase label -->
+              <text x="11" y="-3" fill="#ddd" font-family="JetBrains Mono, monospace" font-size="4.5" text-anchor="middle" opacity="0.7">Q1 Q2</text>
+            </g>
+
+            <!-- Phase B — top right -->
+            <g transform="translate(260, 80)">
+              <rect x="-8" y="-6" width="56" height="42" rx="3" fill="#1a3a1a" opacity="0.3"/>
+              <rect x="0" y="0" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="2" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="5" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="8" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="11" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="3" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <rect x="0" y="18" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="20" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="23" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="26" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="29" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="21" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <rect x="30" y="22" width="10" height="5" rx="0.5" fill="#1a1a1a" stroke="#555" stroke-width="0.4"/>
+              <text x="11" y="-3" fill="#ddd" font-family="JetBrains Mono, monospace" font-size="4.5" text-anchor="middle" opacity="0.7">Q3 Q4</text>
+            </g>
+
+            <!-- Phase C — bottom center -->
+            <g transform="translate(170, 290)">
+              <rect x="-8" y="-6" width="56" height="42" rx="3" fill="#1a3a1a" opacity="0.3"/>
+              <rect x="0" y="0" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="2" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="5" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="8" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="11" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="3" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <rect x="0" y="18" width="22" height="14" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <rect x="-3" y="20" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="23" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="26" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="-3" y="29" width="3" height="2" rx="0.3" fill="#c9a84c"/>
+              <rect x="22" y="21" width="3" height="8" rx="0.3" fill="#c9a84c"/>
+              <rect x="30" y="22" width="10" height="5" rx="0.5" fill="#1a1a1a" stroke="#555" stroke-width="0.4"/>
+              <text x="11" y="-3" fill="#ddd" font-family="JetBrains Mono, monospace" font-size="4.5" text-anchor="middle" opacity="0.7">Q5 Q6</text>
+            </g>
+
+            <!-- ========== BULK CAPACITOR ARRAYS ========== -->
+            <!-- VBAT caps — rows near power stage (1206 size) -->
+            <g class="bulk-caps" opacity="0.9">
+              <!-- Row 1 — above phase A -->
+              <rect x="60" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="73" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="86" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="99" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="112" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="125" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <!-- Row 2 — above phase B -->
+              <rect x="258" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="271" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="284" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="297" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="310" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="323" y="55" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <!-- Row 3 — caps near phase C -->
+              <rect x="140" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="153" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="166" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="235" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="248" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="261" y="280" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <!-- More caps between phases -->
+              <rect x="148" y="68" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="161" y="68" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="230" y="68" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+              <rect x="243" y="68" width="10" height="5.5" rx="0.6" fill="#1a1a1a" stroke="#4a4a4a" stroke-width="0.3"/>
+            </g>
+
+            <!-- ========== STM32G474 MCU (LQFP-64, rotated -45°) ========== -->
+            <g transform="translate(148, 185) rotate(-45)">
+              <!-- Package body -->
+              <rect x="-23" y="-23" width="46" height="46" rx="2" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.6"/>
+              <!-- Pin 1 marker -->
+              <circle cx="-17" cy="-17" r="2" fill="#2a2a2a"/>
+              <!-- Die marking -->
+              <rect x="-15" y="-15" width="30" height="30" rx="1" fill="none" stroke="#222" stroke-width="0.4"/>
+              <!-- Pins — top row -->
+              <g fill="#c9a84c">
+                <rect x="-21" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-18" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-15" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-12" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-9" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-6" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-3" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="0" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="3" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="6" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="9" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="12" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="15" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="18" y="-26" width="1.5" height="3.5" rx="0.2"/>
+                <!-- Bottom row -->
+                <rect x="-21" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-18" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-15" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-12" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-9" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-6" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="-3" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="0" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="3" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="6" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="9" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="12" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="15" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <rect x="18" y="22.5" width="1.5" height="3.5" rx="0.2"/>
+                <!-- Left column -->
+                <rect x="-26" y="-21" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-18" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-15" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-12" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-9" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-6" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="-3" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="0" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="3" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="6" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="9" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="12" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="15" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="-26" y="18" width="3.5" height="1.5" rx="0.2"/>
+                <!-- Right column -->
+                <rect x="22.5" y="-21" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-18" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-15" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-12" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-9" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-6" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="-3" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="0" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="3" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="6" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="9" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="12" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="15" width="3.5" height="1.5" rx="0.2"/>
+                <rect x="22.5" y="18" width="3.5" height="1.5" rx="0.2"/>
+              </g>
+              <!-- IC label (rotated back to be readable) -->
+              <text x="0" y="2" fill="#555" font-family="JetBrains Mono, monospace" font-size="5" text-anchor="middle" transform="rotate(45)">STM32</text>
+              <text x="0" y="8" fill="#444" font-family="JetBrains Mono, monospace" font-size="3.5" text-anchor="middle" transform="rotate(45)">G474RE</text>
+            </g>
+
+            <!-- ========== DRV8353FS (WQFN-40, rotated -45°) ========== -->
+            <g transform="translate(215, 170) rotate(-45)">
+              <rect x="-15" y="-15" width="30" height="30" rx="1.5" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <!-- Thermal pad -->
+              <rect x="-9" y="-9" width="18" height="18" rx="0.5" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="0.3"/>
+              <!-- Pin 1 marker -->
+              <circle cx="-10" cy="-10" r="1.5" fill="#222"/>
+              <!-- QFN pads — top/bottom/left/right -->
+              <g fill="#c9a84c">
+                <rect x="-13" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-10.5" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-8" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-5.5" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-3" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-0.5" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="2" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="4.5" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="7" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="9.5" y="-17" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-13" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-10.5" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-8" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-5.5" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-3" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-0.5" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="2" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="4.5" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="7" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="9.5" y="14.5" width="1.2" height="2.5" rx="0.2"/>
+                <rect x="-17" y="-13" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="-10.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="-8" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="-5.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="-3" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="-0.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="2" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="4.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="7" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="-17" y="9.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-13" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-10.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-8" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-5.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-3" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="-0.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="2" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="4.5" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="7" width="2.5" height="1.2" rx="0.2"/>
+                <rect x="14.5" y="9.5" width="2.5" height="1.2" rx="0.2"/>
+              </g>
+              <text x="0" y="1" fill="#555" font-family="JetBrains Mono, monospace" font-size="4" text-anchor="middle" transform="rotate(45)">DRV</text>
+              <text x="0" y="6" fill="#444" font-family="JetBrains Mono, monospace" font-size="3" text-anchor="middle" transform="rotate(45)">8353FS</text>
+            </g>
+
+            <!-- ========== AS5047P ENCODER (TSSOP-14, bottom center) ========== -->
+            <g transform="translate(200, 245)">
+              <rect x="-12" y="-8" width="24" height="16" rx="1" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.5"/>
+              <circle cx="-7" cy="-4" r="1.2" fill="#222"/>
+              <g fill="#c9a84c">
+                <rect x="-11" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="-8.5" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="-6" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="-3.5" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="-1" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="1.5" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="4" y="-11" width="1" height="3" rx="0.2"/>
+                <rect x="-11" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="-8.5" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="-6" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="-3.5" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="-1" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="1.5" y="8" width="1" height="3" rx="0.2"/>
+                <rect x="4" y="8" width="1" height="3" rx="0.2"/>
+              </g>
+              <text x="0" y="2" fill="#555" font-family="JetBrains Mono, monospace" font-size="3.8" text-anchor="middle">AS5047P</text>
+            </g>
+
+            <!-- ========== XT60 CONNECTOR (top center) ========== -->
+            <g transform="translate(185, 36)">
+              <rect x="0" y="0" width="30" height="14" rx="2" fill="#2a2a2a" stroke="#c9a84c" stroke-width="0.6"/>
+              <rect x="5" y="2" width="8" height="10" rx="1" fill="#c9a84c" opacity="0.7"/>
+              <rect x="17" y="2" width="8" height="10" rx="1" fill="#c9a84c" opacity="0.7"/>
+              <text x="15" y="-2" fill="#ddd" font-family="JetBrains Mono, monospace" font-size="3.5" text-anchor="middle" opacity="0.6">XT60</text>
+            </g>
+
+            <!-- ========== CAN / SWD connectors ========== -->
+            <!-- CAN connector left of XT60 -->
+            <g transform="translate(150, 38)">
+              <rect x="0" y="0" width="16" height="8" rx="1" fill="#1a1a1a" stroke="#666" stroke-width="0.4"/>
+              <text x="8" y="-2" fill="#aaa" font-family="JetBrains Mono, monospace" font-size="3" text-anchor="middle" opacity="0.6">CAN</text>
+            </g>
+            <!-- SWD connector right side -->
+            <g transform="translate(310, 195)">
+              <rect x="0" y="0" width="8" height="16" rx="1" fill="#1a1a1a" stroke="#666" stroke-width="0.4"/>
+              <text x="4" y="-2" fill="#aaa" font-family="JetBrains Mono, monospace" font-size="3" text-anchor="middle" opacity="0.6">SWD</text>
+            </g>
+
+            <!-- ========== POWER REGULATION (5V buck, 3.3V buck, LDO) ========== -->
+            <g transform="translate(80, 210)">
+              <!-- 5V buck U2 -->
+              <rect x="0" y="0" width="12" height="8" rx="0.8" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.4"/>
+              <text x="6" y="5.5" fill="#444" font-family="JetBrains Mono, monospace" font-size="2.8" text-anchor="middle">U2</text>
+              <!-- 3.3V buck U4 -->
+              <rect x="0" y="20" width="8" height="6" rx="0.6" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.4"/>
+              <text x="4" y="24.5" fill="#444" font-family="JetBrains Mono, monospace" font-size="2.5" text-anchor="middle">U4</text>
+              <!-- LDO U5 -->
+              <rect x="0" y="34" width="6" height="5" rx="0.5" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.3"/>
+              <text x="3" y="38" fill="#444" font-family="JetBrains Mono, monospace" font-size="2.2" text-anchor="middle">U5</text>
+              <!-- Inductors -->
+              <rect x="18" y="1" width="10" height="7" rx="1" fill="#1a1a1a" stroke="#555" stroke-width="0.4"/>
+              <text x="23" y="5.5" fill="#444" font-family="JetBrains Mono, monospace" font-size="2.5" text-anchor="middle">L1</text>
+              <!-- Decoupling caps near regulators -->
+              <rect x="16" y="22" width="4" height="2.2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="22" y="22" width="4" height="2.2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+            </g>
+
+            <!-- ========== CAN TRANSCEIVER (HVSON-8) ========== -->
+            <g transform="translate(290, 235)">
+              <rect x="0" y="0" width="12" height="10" rx="0.8" fill="url(#icBody)" stroke="#3a3a3a" stroke-width="0.4"/>
+              <g fill="#c9a84c">
+                <rect x="-2" y="1" width="2" height="1" rx="0.2"/>
+                <rect x="-2" y="3" width="2" height="1" rx="0.2"/>
+                <rect x="-2" y="5" width="2" height="1" rx="0.2"/>
+                <rect x="-2" y="7" width="2" height="1" rx="0.2"/>
+                <rect x="12" y="1" width="2" height="1" rx="0.2"/>
+                <rect x="12" y="3" width="2" height="1" rx="0.2"/>
+                <rect x="12" y="5" width="2" height="1" rx="0.2"/>
+                <rect x="12" y="7" width="2" height="1" rx="0.2"/>
+              </g>
+              <text x="6" y="6.5" fill="#444" font-family="JetBrains Mono, monospace" font-size="2.5" text-anchor="middle">U10</text>
+            </g>
+
+            <!-- ========== SCATTERED DECOUPLING CAPS (0402 size) ========== -->
+            <g class="decoupling" opacity="0.8">
+              <rect x="120" y="160" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="126" y="162" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="170" y="152" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="240" y="155" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="245" y="195" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="130" y="200" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="260" y="210" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="190" y="218" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="155" y="225" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="230" y="230" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="110" y="180" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+              <rect x="270" y="170" width="3.5" height="2" rx="0.3" fill="#1a1a1a" stroke="#444" stroke-width="0.2"/>
+            </g>
+
+            <!-- ========== GATE RESISTORS (0805 near FETs) ========== -->
+            <g class="gate-resistors" opacity="0.85">
+              <rect x="115" y="88" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+              <rect x="115" y="94" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+              <rect x="250" y="88" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+              <rect x="250" y="94" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+              <rect x="220" y="300" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+              <rect x="220" y="306" width="6" height="3" rx="0.4" fill="#1a1a1a" stroke="#555" stroke-width="0.3"/>
+            </g>
+
+            <!-- ========== VIA DOTS ========== -->
+            <g class="vias" opacity="0.6">
+              <circle cx="135" cy="145" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="145" cy="140" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="175" cy="145" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="230" cy="150" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="240" cy="180" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="160" cy="205" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="225" cy="215" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="190" cy="160" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="200" cy="175" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="145" cy="235" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="255" cy="250" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="165" cy="260" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="280" cy="180" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="110" cy="160" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="100" cy="250" r="1.5" fill="url(#viaGrad)"/>
+              <circle cx="295" cy="200" r="1.5" fill="url(#viaGrad)"/>
+              <!-- Thermal vias under ICs -->
+              <circle cx="150" cy="183" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="153" cy="187" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="146" cy="187" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="216" cy="168" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="213" cy="172" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="219" cy="172" r="1.2" fill="url(#viaGrad)"/>
+              <!-- Ground stitching ring -->
+              <circle cx="50" cy="100" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="50" cy="200" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="50" cy="300" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="100" cy="340" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="200" cy="360" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="300" cy="340" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="350" cy="300" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="350" cy="200" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="350" cy="100" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="300" cy="60" r="1.2" fill="url(#viaGrad)"/>
+              <circle cx="100" cy="60" r="1.2" fill="url(#viaGrad)"/>
+            </g>
+
+            <!-- ========== COPPER TRACES (key routes) ========== -->
+            <g class="traces" stroke="#8b6914" fill="none" opacity="0.35">
+              <!-- PWM from MCU to DRV -->
+              <polyline points="130,175 125,170 125,160 215,160" stroke-width="0.8"/>
+              <polyline points="130,180 120,170 120,155 215,155" stroke-width="0.8"/>
+              <polyline points="130,185 115,170 115,150 215,150" stroke-width="0.8"/>
+              <!-- SPI bus -->
+              <polyline points="170,185 175,185 200,185 215,175" stroke-width="0.6"/>
+              <!-- Power traces (thicker) -->
+              <polyline points="200,50 200,80 120,80 100,90" stroke-width="2.5" stroke="#6d5310" opacity="0.4"/>
+              <polyline points="200,50 200,80 280,80 275,90" stroke-width="2.5" stroke="#6d5310" opacity="0.4"/>
+              <!-- Gate drive routes -->
+              <polyline points="230,165 240,155 245,155 250,90" stroke-width="0.6"/>
+              <polyline points="230,170 245,165 250,165 260,90" stroke-width="0.6"/>
+              <!-- Phase output traces (thick) -->
+              <polyline points="108,110 108,130 130,150" stroke-width="1.8" stroke="#6d5310" opacity="0.3"/>
+              <polyline points="283,110 283,130 240,150" stroke-width="1.8" stroke="#6d5310" opacity="0.3"/>
+              <polyline points="195,320 195,265 200,260" stroke-width="1.8" stroke="#6d5310" opacity="0.3"/>
+            </g>
+
+            <!-- ========== SILKSCREEN ========== -->
+            <g class="silkscreen" fill="#ccc" opacity="0.45" font-family="JetBrains Mono, monospace">
+              <text x="200" y="144" font-size="8" text-anchor="middle" font-weight="700" letter-spacing="1.5">TITAN_FOC</text>
+              <text x="200" y="155" font-size="4.5" text-anchor="middle" letter-spacing="0.5">v9.1</text>
+              <text x="328" y="330" font-size="5" text-anchor="middle" font-weight="600">KIL</text>
+              <!-- Phase labels near motor pads -->
+              <text x="55" y="105" font-size="4">A</text>
+              <text x="330" y="105" font-size="4">B</text>
+              <text x="200" y="350" font-size="4" text-anchor="middle">C</text>
+            </g>
+
+            <!-- ========== LED INDICATORS (small SMD) ========== -->
+            <g transform="translate(310, 150)">
+              <rect x="0" y="0" width="5" height="3" rx="0.4" fill="#1a2a0a" stroke="#2a4a2a" stroke-width="0.3"/>
+              <rect x="0" y="6" width="5" height="3" rx="0.4" fill="#2a2a0a" stroke="#4a4a0a" stroke-width="0.3"/>
+              <text x="8" y="2.5" fill="#aaa" font-family="JetBrains Mono, monospace" font-size="2.5" opacity="0.5">D13</text>
+              <text x="8" y="8.5" fill="#aaa" font-family="JetBrains Mono, monospace" font-size="2.5" opacity="0.5">D12</text>
+            </g>
+
+            <!-- ========== PHASE PADS (motor output, large copper) ========== -->
+            <g class="phase-pads">
+              <rect x="42" y="120" width="16" height="16" rx="2" fill="#c9a84c" opacity="0.6" stroke="#8b6914" stroke-width="0.5"/>
+              <rect x="342" y="120" width="16" height="16" rx="2" fill="#c9a84c" opacity="0.6" stroke="#8b6914" stroke-width="0.5"/>
+              <rect x="192" y="345" width="16" height="16" rx="2" fill="#c9a84c" opacity="0.6" stroke="#8b6914" stroke-width="0.5"/>
+            </g>
+
+          </svg>
+        </div>
+      </div>
+
+      <div class="board-specs reveal">
+        <span class="label">Research-grade QDD Controller</span>
+        <h3 class="board-specs__title">229 components. 65.7mm circle. One ISR.</h3>
+        <p class="board-specs__subtitle">A 6-layer circular PCB running field-oriented control at 20&thinsp;kHz with hardware CORDIC, 3-shunt current sensing, and on-device learned compensation.</p>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card__value"><span class="counter" data-target="229">0</span></div>
+            <div class="stat-card__label">Components</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value"><span class="counter" data-target="20" data-suffix=" kHz">0</span></div>
+            <div class="stat-card__label">FOC Loop Rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value"><span class="counter" data-target="6">0</span></div>
+            <div class="stat-card__label">PCB Layers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value"><span class="counter" data-target="170" data-suffix=" MHz">0</span></div>
+            <div class="stat-card__label">Clock Speed</div>
+          </div>
+        </div>
+
+        <ul class="spec-list">
+          <li><span class="spec-list__key">MCU</span><span class="spec-list__val">STM32G474RE &mdash; 170 MHz Cortex-M4F, CORDIC, FDCAN</span></li>
+          <li><span class="spec-list__key">Gate Driver</span><span class="spec-list__val">DRV8353FS &mdash; 3&times; CSA, 100V, SPI-configurable</span></li>
+          <li><span class="spec-list__key">MOSFETs</span><span class="spec-list__val">6&times; TPW1R306PL &mdash; 100V, 4.2m&Omega; R<sub>ds(on)</sub></span></li>
+          <li><span class="spec-list__key">Encoder</span><span class="spec-list__val">AS5047P &mdash; 14-bit SPI, DAEC for high-speed</span></li>
+          <li><span class="spec-list__key">Shunts</span><span class="spec-list__val">3&times; 0.5m&Omega; HCS1206FTL500</span></li>
+          <li><span class="spec-list__key">Comm</span><span class="spec-list__val">CAN-FD @ 5 Mbps &mdash; MIT Cheetah impedance protocol</span></li>
+          <li><span class="spec-list__key">Novel</span><span class="spec-list__val">AAI &mdash; on-device learned compensator in ISR</span></li>
+          <li><span class="spec-list__key">Target</span><span class="spec-list__val">T-Motor U5 Kv60 + 8:1 cycloidal reduction</span></li>
+        </ul>
+        <a href="titan.html" class="btn btn--secondary" style="margin-top:24px;">
+          Deep Dive
+          <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ================================================================
+     AAI — RESEARCH
+     ================================================================ -->
+<section class="section" id="aai">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label label--amber">Research Contribution</span>
+      <h2>Adaptive Actuator Intelligence</h2>
+      <p>Four novel contributions closing the sim-to-real gap at the actuator level &mdash; not the policy level.</p>
+    </div>
+    <div class="aai-grid reveal-stagger">
+      <div class="aai-card">
+        <div class="aai-card__num">C1 &mdash; CONTRIBUTION</div>
+        <h3 class="aai-card__title">Self-Profiling Motor Characterization</h3>
+        <p class="aai-card__text">Auto-identification of R, L, &lambda;, cogging torque map, and encoder offset on first boot. No datasheets required &mdash; the controller learns its own motor.</p>
+      </div>
+      <div class="aai-card">
+        <div class="aai-card__num">C2 &mdash; CONTRIBUTION</div>
+        <h3 class="aai-card__title">Fused Learned Compensator</h3>
+        <p class="aai-card__text">Fixed-point neural network running inside the 20&thinsp;kHz FOC ISR. &lt;5&mu;s inference on CORDIC hardware. Compensates cogging, friction, and thermal drift in real-time.</p>
+      </div>
+      <div class="aai-card">
+        <div class="aai-card__num">C3 &mdash; CONTRIBUTION</div>
+        <h3 class="aai-card__title">Digital Twin Telemetry</h3>
+        <p class="aai-card__text">CAN-FD streaming of calibrated actuator state at 5&thinsp;Mbps. Full torque, velocity, position, temperature &mdash; everything the simulator needs to close the loop.</p>
+      </div>
+      <div class="aai-card">
+        <div class="aai-card__num">C4 &mdash; CONTRIBUTION</div>
+        <h3 class="aai-card__title">Sim-to-Real at the Actuator Level</h3>
+        <p class="aai-card__text">Inspired by arXiv:2410.16591 &mdash; GRU-based torque estimation achieving 32% cost-of-transport reduction. The actuator model, not the policy, is the bottleneck.</p>
+      </div>
+    </div>
+
+    <!-- Architecture diagram -->
+    <div class="aai-diagram reveal">
+      <div class="aai-diagram__title">AAI Architecture &mdash; FOC ISR Integration</div>
+      <div class="aai-flow">
+        <div class="aai-flow__node">Sensors<br><span style="font-size:0.65rem;opacity:0.6">ADC + SPI</span></div>
+        <div class="aai-flow__arrow"></div>
+        <div class="aai-flow__node">Clarke/Park<br><span style="font-size:0.65rem;opacity:0.6">CORDIC HW</span></div>
+        <div class="aai-flow__arrow"></div>
+        <div class="aai-flow__branch">
+          <div class="aai-flow__node">PI Current Loop<br><span style="font-size:0.65rem;opacity:0.6">Id/Iq control</span></div>
+          <div class="aai-flow__branch-line"></div>
+          <div class="aai-flow__node aai-flow__node--highlight">Learned Comp.<br><span style="font-size:0.65rem;opacity:0.6">NN &lt;5&mu;s</span></div>
+          <div class="aai-flow__branch-line"></div>
+          <div class="aai-flow__node aai-flow__node--highlight">Self-Profile<br><span style="font-size:0.65rem;opacity:0.6">+ Adaptation</span></div>
+        </div>
+        <div class="aai-flow__arrow"></div>
+        <div class="aai-flow__node">SVPWM<br><span style="font-size:0.65rem;opacity:0.6">Space Vector</span></div>
+        <div class="aai-flow__arrow"></div>
+        <div class="aai-flow__node">Motor<br><span style="font-size:0.65rem;opacity:0.6">3-phase</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ================================================================
+     PIPELINE
+     ================================================================ -->
+<section class="section section--alt" id="pipeline">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label">End-to-End</span>
+      <h2>From simulation to deployment</h2>
+      <p>A complete pipeline from URDF models through massively parallel training to real hardware deployment with digital twin refinement.</p>
+    </div>
+
+    <div class="pipeline-flow" id="pipelineFlow">
+      <div class="pipeline-step">
+        <div class="pipeline-step__icon">&#128196;</div>
+        <div class="pipeline-step__title">URDF/MJCF</div>
+        <div class="pipeline-step__desc">Robot model with calibrated actuator dynamics</div>
+      </div>
+      <div class="pipeline-connector"><div class="pipeline-connector__line"></div></div>
+      <div class="pipeline-step">
+        <div class="pipeline-step__icon">&#9889;</div>
+        <div class="pipeline-step__title">Isaac Gym</div>
+        <div class="pipeline-step__desc">Massively parallel GPU simulation (4096+ envs)</div>
+      </div>
+      <div class="pipeline-connector"><div class="pipeline-connector__line"></div></div>
+      <div class="pipeline-step">
+        <div class="pipeline-step__icon">&#129504;</div>
+        <div class="pipeline-step__title">Policy Training</div>
+        <div class="pipeline-step__desc">PPO/SAC with domain randomization</div>
+      </div>
+      <div class="pipeline-connector"><div class="pipeline-connector__line"></div></div>
+      <div class="pipeline-step">
+        <div class="pipeline-step__icon">&#9881;</div>
+        <div class="pipeline-step__title">TITAN Deploy</div>
+        <div class="pipeline-step__desc">CAN-FD impedance commands at 1&thinsp;kHz</div>
+      </div>
+      <div class="pipeline-connector"><div class="pipeline-connector__line"></div></div>
+      <div class="pipeline-step">
+        <div class="pipeline-step__icon">&#128260;</div>
+        <div class="pipeline-step__title">Digital Twin</div>
+        <div class="pipeline-step__desc">Actuator telemetry refines simulation model</div>
+      </div>
+    </div>
+
+    <!-- TITAN Biped Card -->
+    <div class="titan-card reveal">
+      <div>
+        <span class="label label--green">Hardware Platform</span>
+        <h3 style="margin-top:12px;">TITAN Bipedal Robot</h3>
+        <p class="text-secondary" style="margin-top:8px;font-size:0.92rem;line-height:1.7;">A 4-DOF quasi-direct-drive biped designed for locomotion research. Every joint is a TITAN_FOC controller driving a T-Motor through a cycloidal gearbox.</p>
+      </div>
+      <div>
+        <ul class="titan-card__specs">
+          <li>4-DOF &mdash; hip + knee pitch per leg</li>
+          <li>T-Motor U5 Kv60 actuators</li>
+          <li>8:1 cycloidal reduction (30mm, 3D printed)</li>
+          <li>0.25m + 0.25m link lengths</li>
+          <li>Passive ankle springs (Phase 1)</li>
+          <li>CAN-FD daisy-chain to host PC</li>
+        </ul>
+        <div class="titan-card__cost">~$1,700 <span>total BOM cost</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ================================================================
+     RESOURCES
+     ================================================================ -->
+<section class="section" id="resources">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label label--green">Open Source</span>
+      <h2>Resources &amp; Documentation</h2>
+      <p>Everything we build is documented. The field guide alone is 14 chapters covering FOC theory through sim-to-real deployment.</p>
+    </div>
+
+    <div class="resources-grid reveal-stagger">
+      <a href="https://github.com/SpaceCadetJ/Kinetic-Intelligence-Lab" target="_blank" rel="noopener" class="resource-card">
+        <h3 class="resource-card__title"><span class="icon">&#128193;</span> GitHub Repository</h3>
+        <p class="resource-card__text">Full source code: FOC firmware, control loops, CAN protocol, PCB design files, simulation configs.</p>
+        <span class="resource-card__link">SpaceCadetJ/Kinetic-Intelligence-Lab</span>
+      </a>
+      <div class="resource-card">
+        <h3 class="resource-card__title"><span class="icon">&#128214;</span> KIL Field Guide</h3>
+        <p class="resource-card__text">14-chapter documentation covering FOC theory, PCB design, firmware architecture, CAN protocol, AAI, and sim-to-real pipeline.</p>
+        <span class="resource-card__link label--dim">Coming soon</span>
+      </div>
+      <div class="resource-card">
+        <h3 class="resource-card__title"><span class="icon">&#128295;</span> Technical Reference</h3>
+        <p class="resource-card__text">The Complete Guide to QDD Actuator Controllers &mdash; from component selection through closed-loop validation.</p>
+        <span class="resource-card__link label--dim">In development</span>
+      </div>
+      <div class="resource-card">
+        <h3 class="resource-card__title"><span class="icon">&#128200;</span> TITAN_FOC BOM</h3>
+        <p class="resource-card__text">Full 229-component bill of materials with JLCPCB assembly compatibility and sourcing guide.</p>
+        <span class="resource-card__link label--dim">Available in repo</span>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:48px;">
+      <span class="label label--dim" style="margin-bottom:16px;display:block;">Key References</span>
+      <ul class="papers">
+        <li>
+          <strong>Wensing, Wang, Seok, Otten, Lang, Kim (2017)</strong> &mdash; Proprioceptive Actuator Design in the MIT Cheetah: Impact Mitigation and High-Bandwidth Physical Interaction for Dynamic Legged Robots
+          <span class="papers__venue">IEEE Transactions on Robotics</span>
+        </li>
+        <li>
+          <strong>Katz, Di Carlo, Kim (2019)</strong> &mdash; Mini Cheetah: A Platform for Pushing the Limits of Dynamic Quadruped Control
+          <span class="papers__venue">IEEE ICRA 2019</span>
+        </li>
+        <li>
+          <strong>arXiv:2410.16591 (2024)</strong> &mdash; Cycloidal QDD with learning-based torque estimation &mdash; 32% cost-of-transport reduction via GRU actuator model
+          <span class="papers__venue">arXiv preprint</span>
+        </li>
+        <li>
+          <strong>Radosavovic et al. (2024)</strong> &mdash; Zero-shot transformer locomotion policy deployment on Digit humanoid
+          <span class="papers__venue">Science Robotics</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ================================================================
+     ROADMAP + TEAM + CTA
+     ================================================================ -->
+<section class="section section--alt" id="roadmap">
+  <div class="container">
+    <div class="section__header reveal">
+      <span class="label">Roadmap</span>
+      <h2>Where we are, where we're going</h2>
+    </div>
+
+    <div class="roadmap-grid reveal-stagger" id="roadmapGrid">
+      <div class="roadmap-item">
+        <div class="roadmap-item__header">
+          <span class="roadmap-item__title">Foundation</span>
+          <span class="roadmap-item__pct roadmap-item__pct--high counter" data-target="85" data-suffix="%">0%</span>
+        </div>
+        <p class="roadmap-item__text">FOC firmware, drivers, control stack, CAN-FD protocol, PCB design, schematic review, routing preparation.</p>
+        <div class="roadmap-bar">
+          <div class="roadmap-bar__fill roadmap-bar__fill--green" data-width="85%"></div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item__header">
+          <span class="roadmap-item__title">Validation</span>
+          <span class="roadmap-item__pct roadmap-item__pct--mid counter" data-target="25" data-suffix="%">0%</span>
+        </div>
+        <p class="roadmap-item__text">Board fabrication, motor characterization, closed-loop FOC on hardware, CAN-FD integration test.</p>
+        <div class="roadmap-bar">
+          <div class="roadmap-bar__fill roadmap-bar__fill--amber" data-width="25%"></div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item__header">
+          <span class="roadmap-item__title">Intelligence</span>
+          <span class="roadmap-item__pct roadmap-item__pct--low counter" data-target="0" data-suffix="%">0%</span>
+        </div>
+        <p class="roadmap-item__text">AAI training pipeline, on-device inference validation, locomotion policy training, sim-to-real transfer.</p>
+        <div class="roadmap-bar">
+          <div class="roadmap-bar__fill roadmap-bar__fill--dim" data-width="0%"></div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item__header">
+          <span class="roadmap-item__title">Market</span>
+          <span class="roadmap-item__pct roadmap-item__pct--low counter" data-target="0" data-suffix="%">0%</span>
+        </div>
+        <p class="roadmap-item__text">Board sales, documentation platform, community building, first hire, EV actuator exploration.</p>
+        <div class="roadmap-bar">
+          <div class="roadmap-bar__fill roadmap-bar__fill--dim" data-width="0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="section__header reveal" style="margin-top:32px;">
+      <span class="label">Team</span>
+      <h2>Built by engineers, for engineers</h2>
+    </div>
+    <div class="team-section reveal">
+      <div class="team-profile">
+        <div class="team-profile__name">Jay Krisell</div>
+        <div class="team-profile__role">Founder &amp; Lead Engineer</div>
+        <p class="team-profile__bio">EECS graduate researcher at the University of Arkansas, building intelligent actuators at the intersection of power electronics, embedded systems, and machine learning. Background in quality engineering at Bosch R&amp;D and aviation electrical systems in the Army National Guard.</p>
+        <div class="team-tags">
+          <span class="team-tag">EECS @ UArk</span>
+          <span class="team-tag">Bosch QE (R&amp;D)</span>
+          <span class="team-tag">Army NG &mdash; Aviation Electrician</span>
+          <span class="team-tag">UH-60 / UH-72</span>
+          <span class="team-tag">Embedded Systems</span>
+          <span class="team-tag">Power Electronics</span>
+        </div>
+      </div>
+      <div class="team-advisors">
+        <div class="advisor-card">
+          <div class="advisor-card__name">Dr. Tuan Dang</div>
+          <div class="advisor-card__dept">Cognitive Robotics Lab &mdash; University of Arkansas</div>
+          <p class="advisor-card__focus">Advisor &mdash; Robot learning, sim-to-real transfer, locomotion policy development, reinforcement learning for legged systems.</p>
+        </div>
+        <div class="advisor-card">
+          <div class="advisor-card__name">Dr. McCann</div>
+          <div class="advisor-card__dept">Power Systems &mdash; University of Arkansas</div>
+          <p class="advisor-card__focus">Advisor &mdash; Power electronics design, motor drive systems, FOC implementation, thermal management.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-box reveal">
+      <h3>Let's build something</h3>
+      <p>Interested in intelligent actuators, FOC firmware, or sim-to-real pipelines? We're always looking for collaborators.</p>
+      <a href="mailto:jckrisel@uark.edu" class="cta-box__email">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
+        jckrisel@uark.edu
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="footer">
+  <div class="container footer__inner">
+    <span class="footer__copy">&copy; 2026 Kinetic Intelligence Lab &mdash; University of Arkansas</span>
+    <ul class="footer__links">
+      <li><a href="https://github.com/SpaceCadetJ/Kinetic-Intelligence-Lab" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="mailto:jckrisel@uark.edu">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script>
+(function() {
+  'use strict';
+
+  /* =================================================================
+     NAVIGATION — Transparent → Frosted Glass on Scroll
+     ================================================================= */
+  const nav = document.getElementById('nav');
+  const mobileToggle = document.getElementById('mobileToggle');
+  const navLinks = document.getElementById('navLinks');
+  let lastScroll = 0;
+
+  window.addEventListener('scroll', function() {
+    const scrollY = window.scrollY;
+    if (scrollY > 40) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+    lastScroll = scrollY;
+  }, { passive: true });
+
+  mobileToggle.addEventListener('click', function() {
+    navLinks.classList.toggle('open');
+  });
+
+  // Close mobile menu on link click
+  navLinks.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      navLinks.classList.remove('open');
+    });
+  });
+
+  /* =================================================================
+     HERO — Staggered Word Reveal
+     ================================================================= */
+  const heroTitle = document.getElementById('heroTitle');
+  const titleText = heroTitle.textContent;
+  heroTitle.innerHTML = '';
+  const words = titleText.split(' ');
+  words.forEach(function(word, i) {
+    const span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = word + ' ';
+    heroTitle.appendChild(span);
+    setTimeout(function() {
+      span.classList.add('visible');
+    }, 300 + i * 80);
+  });
+
+  // Animate hero tag, subtitle, actions
+  const heroTag = document.querySelector('.hero__tag');
+  const heroSubtitle = document.querySelector('.hero__subtitle');
+  const heroActions = document.querySelector('.hero__actions');
+  setTimeout(function() {
+    heroTag.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+    heroTag.style.opacity = '1';
+    heroTag.style.transform = 'translateY(0)';
+  }, 200);
+  setTimeout(function() {
+    heroSubtitle.style.transition = 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)';
+    heroSubtitle.style.opacity = '1';
+    heroSubtitle.style.transform = 'translateY(0)';
+  }, 800);
+  setTimeout(function() {
+    heroActions.style.transition = 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)';
+    heroActions.style.opacity = '1';
+    heroActions.style.transform = 'translateY(0)';
+  }, 1000);
+
+  /* =================================================================
+     HERO CANVAS — Animated Circuit Traces
+     ================================================================= */
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d');
+  let cW, cH;
+  const traces = [];
+  const TRACE_COUNT = 35;
+  const GRID_SIZE = 40;
+
+  function resizeCanvas() {
+    cW = canvas.width = canvas.offsetWidth;
+    cH = canvas.height = canvas.offsetHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Snap to grid for orthogonal routing
+  function snapToGrid(val) {
+    return Math.round(val / GRID_SIZE) * GRID_SIZE;
+  }
+
+  function createTrace() {
+    const startX = snapToGrid(Math.random() * cW);
+    const startY = snapToGrid(Math.random() * cH);
+    const segments = [];
+    let x = startX, y = startY;
+    const numSegments = 3 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < numSegments; i++) {
+      const horizontal = Math.random() > 0.5;
+      const length = (2 + Math.floor(Math.random() * 5)) * GRID_SIZE;
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      const nx = horizontal ? x + length * dir : x;
+      const ny = horizontal ? y : y + length * dir;
+      segments.push({ x1: x, y1: y, x2: nx, y2: ny });
+      x = nx;
+      y = ny;
+    }
+    return {
+      segments: segments,
+      progress: 0,
+      speed: 0.003 + Math.random() * 0.005,
+      opacity: 0.1 + Math.random() * 0.15,
+      width: Math.random() > 0.7 ? 1.5 : 0.8,
+      color: Math.random() > 0.85 ? 'rgba(6, 182, 212,' : 'rgba(139, 105, 20,'
+    };
+  }
+
+  for (let i = 0; i < TRACE_COUNT; i++) {
+    traces.push(createTrace());
+  }
+
+  // Draw a dot (via) at endpoints
+  function drawVia(x, y, opacity) {
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(201, 168, 76, ' + opacity * 0.6 + ')';
+    ctx.fill();
+  }
+
+  function animateTraces() {
+    ctx.clearRect(0, 0, cW, cH);
+
+    // Subtle grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < cW; x += GRID_SIZE) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, cH);
+      ctx.stroke();
+    }
+    for (let y = 0; y < cH; y += GRID_SIZE) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(cW, y);
+      ctx.stroke();
+    }
+
+    traces.forEach(function(trace) {
+      trace.progress += trace.speed;
+      if (trace.progress > 2) {
+        // Reset
+        const newTrace = createTrace();
+        trace.segments = newTrace.segments;
+        trace.progress = 0;
+        trace.speed = newTrace.speed;
+        trace.opacity = newTrace.opacity;
+      }
+
+      const totalSegments = trace.segments.length;
+      const drawProgress = Math.min(trace.progress, 1);
+      const fadeProgress = trace.progress > 1 ? trace.progress - 1 : 0;
+      const currentOpacity = trace.opacity * (1 - fadeProgress);
+
+      if (currentOpacity <= 0) return;
+
+      ctx.strokeStyle = trace.color + currentOpacity + ')';
+      ctx.lineWidth = trace.width;
+      ctx.lineCap = 'square';
+
+      const segmentsToDraw = drawProgress * totalSegments;
+
+      for (let i = 0; i < Math.min(Math.ceil(segmentsToDraw), totalSegments); i++) {
+        const seg = trace.segments[i];
+        const segProgress = Math.min(segmentsToDraw - i, 1);
+
+        const ex = seg.x1 + (seg.x2 - seg.x1) * segProgress;
+        const ey = seg.y1 + (seg.y2 - seg.y1) * segProgress;
+
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        // Draw via at segment junctions
+        if (i > 0 && segProgress >= 1) {
+          drawVia(seg.x1, seg.y1, currentOpacity);
+        }
+      }
+    });
+
+    requestAnimationFrame(animateTraces);
+  }
+  requestAnimationFrame(animateTraces);
+
+  /* =================================================================
+     BOARD PARALLAX — Mouse Response
+     ================================================================= */
+  const boardWrap = document.getElementById('boardWrap');
+  document.addEventListener('mousemove', function(e) {
+    if (!boardWrap) return;
+    const rect = boardWrap.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxTilt = 8;
+    const dx = (e.clientX - centerX) / (window.innerWidth / 2);
+    const dy = (e.clientY - centerY) / (window.innerHeight / 2);
+    const tiltX = -dy * maxTilt;
+    const tiltY = dx * maxTilt;
+    boardWrap.style.animation = 'none';
+    boardWrap.style.transform = 'rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) translateZ(0)';
+  });
+
+  document.addEventListener('mouseleave', function() {
+    if (!boardWrap) return;
+    boardWrap.style.animation = '';
+    boardWrap.style.transform = '';
+  });
+
+  /* =================================================================
+     INTERSECTION OBSERVER — Scroll Reveals
+     ================================================================= */
+  const revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Don't unobserve — let stagger classes take effect
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  document.querySelectorAll('.reveal, .reveal-stagger, .pipeline-flow').forEach(function(el) {
+    revealObserver.observe(el);
+  });
+
+  /* =================================================================
+     STAT COUNTERS — Animate Numbers on Scroll
+     ================================================================= */
+  function animateCounter(el) {
+    const target = parseInt(el.getAttribute('data-target'), 10);
+    const suffix = el.getAttribute('data-suffix') || '';
+    if (el.dataset.animated) return;
+    el.dataset.animated = 'true';
+    const duration = 1500;
+    const startTime = performance.now();
+
+    function update(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out expo
+      const eased = 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(target * eased);
+      el.textContent = current + suffix;
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        el.textContent = target + suffix;
+      }
+    }
+    requestAnimationFrame(update);
+  }
+
+  const counterObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.counter').forEach(function(el) {
+    counterObserver.observe(el);
+  });
+
+  /* =================================================================
+     ROADMAP — Animated Progress Bars
+     ================================================================= */
+  const roadmapObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.roadmap-bar__fill').forEach(function(bar) {
+          setTimeout(function() {
+            bar.style.width = bar.getAttribute('data-width');
+          }, 200);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const roadmapGrid = document.getElementById('roadmapGrid');
+  if (roadmapGrid) {
+    roadmapObserver.observe(roadmapGrid);
+  }
+
+  /* =================================================================
+     SMOOTH SCROLL FOR ANCHOR LINKS
+     ================================================================= */
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height'), 10);
+        const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 20;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
