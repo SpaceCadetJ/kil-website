@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TITAN_FOC — Kinetic Intelligence Lab</title>
-<meta name="description" content="TITAN_FOC v9.1 interactive board viewer, BOM, architecture diagrams, and AAI research documentation.">
+<title>TITAN_FOC v9.1 — Kinetic Intelligence Lab</title>
+<meta name="description" content="Interactive board viewer, BOM, schematics, and research for the TITAN_FOC v9.1 motor controller by Kinetic Intelligence Lab.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ===================================================================
-   CSS CUSTOM PROPERTIES — matches index.html exactly
-   =================================================================== */
+/* =================================================================== */
+/* CSS CUSTOM PROPERTIES                                               */
+/* =================================================================== */
 :root {
   --bg-primary: #05070b;
   --bg-secondary: #0a0e14;
@@ -39,15 +39,19 @@
   --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --nav-height: 56px;
+  --nav-height: 64px;
+  --tab-height: 48px;
+  --section-gap: 120px;
+  --max-width: 1200px;
 }
 
-/* ===================================================================
-   RESET & BASE
-   =================================================================== */
+/* =================================================================== */
+/* RESET & BASE                                                        */
+/* =================================================================== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 body {
   font-family: var(--font-body);
   background: var(--bg-primary);
@@ -55,1814 +59,2403 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   font-size: 16px;
-  min-height: 100vh;
 }
 a { color: var(--cyan); text-decoration: none; transition: color 0.2s; }
 a:hover { color: var(--cyan-bright); }
 ::selection { background: rgba(6, 182, 212, 0.3); color: #fff; }
+
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
+h1 { font-size: clamp(2.5rem, 6vw, 4.2rem); font-weight: 700; }
+h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 0.6em; }
+h3 { font-size: clamp(1.2rem, 2.5vw, 1.5rem); margin-bottom: 0.5em; }
 .mono { font-family: var(--font-mono); }
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.label--amber { color: var(--amber); }
+.label--green { color: var(--green); }
+.text-secondary { color: var(--text-secondary); }
 
-/* ===================================================================
-   HEADER
-   =================================================================== */
-.header {
+/* =================================================================== */
+/* NAVIGATION                                                          */
+/* =================================================================== */
+.nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: var(--nav-height);
-  background: rgba(5, 7, 11, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
   z-index: 1000;
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  gap: 24px;
+  background: rgba(5, 7, 11, 0.82);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border-subtle);
 }
-.header-logo {
+.nav__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  flex-shrink: 0;
+  justify-content: space-between;
 }
-.header-logo svg {
-  width: 28px;
-  height: 28px;
-}
-.header-logo-text {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--cyan);
-}
-.header-title {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: 0.04em;
-  padding-left: 24px;
-  border-left: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-.header-tabs {
+.nav__brand {
   display: flex;
-  gap: 4px;
-  margin-left: auto;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.nav__logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--bg-primary);
+}
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav__links a {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav__links a:hover { color: var(--text-primary); }
+
+/* =================================================================== */
+/* TAB BAR                                                             */
+/* =================================================================== */
+.tab-bar {
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 999;
+  background: rgba(10, 14, 20, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.tab-bar__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
 }
 .tab-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 8px 16px;
+  letter-spacing: 0.06em;
+  padding: 14px 20px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s var(--ease-smooth);
+  transition: all 0.25s var(--ease-smooth);
   white-space: nowrap;
+  text-transform: uppercase;
 }
-.tab-btn:hover {
-  color: var(--text-primary);
-  background: rgba(6, 182, 212, 0.05);
-}
+.tab-btn:hover { color: var(--text-secondary); }
 .tab-btn.active {
   color: var(--cyan);
   border-bottom-color: var(--cyan);
 }
 
-/* ===================================================================
-   MAIN CONTENT
-   =================================================================== */
-.main {
-  padding-top: var(--nav-height);
-  min-height: 100vh;
-}
+/* =================================================================== */
+/* TAB PANELS                                                          */
+/* =================================================================== */
 .tab-panel {
   display: none;
-  min-height: calc(100vh - var(--nav-height));
+  padding: 32px 0 64px;
 }
-.tab-panel.active {
-  display: flex;
+.tab-panel.active { display: block; }
+.tab-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
-/* ===================================================================
-   TAB 1: BOARD VIEWER
-   =================================================================== */
-.viewer-panel {
-  flex: 1;
+/* =================================================================== */
+/* PAGE HEADER                                                         */
+/* =================================================================== */
+.page-header {
+  padding: calc(var(--nav-height) + 32px) 0 0;
+  text-align: center;
+}
+.page-header__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px 24px;
+}
+.page-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 8px;
+}
+.page-header h1 span { color: var(--cyan); }
+.page-header p { color: var(--text-secondary); font-size: 1rem; }
+
+/* =================================================================== */
+/* BOARD VIEWER                                                        */
+/* =================================================================== */
+.board-viewer {
   display: flex;
-  position: relative;
+  gap: 20px;
+  margin-bottom: 20px;
 }
-.viewer-canvas-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
+.board-canvas-wrap {
+  flex: 3;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   background: var(--bg-secondary);
+  overflow: hidden;
+  position: relative;
+  max-height: 650px;
 }
-.viewer-canvas-wrap canvas {
+.board-canvas-wrap canvas {
   display: block;
   width: 100%;
-  height: 100%;
+  height: 650px;
+  cursor: grab;
 }
-.viewer-toolbar {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-}
-.viewer-toolbar label,
-.viewer-toolbar button {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  background: rgba(10, 14, 20, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-  transition: border-color 0.15s;
-}
-.viewer-toolbar label:hover,
-.viewer-toolbar button:hover {
-  border-color: var(--border-hover);
-}
-.viewer-toolbar input[type="checkbox"] {
-  accent-color: var(--cyan);
-  width: 14px;
-  height: 14px;
-}
-.viewer-toolbar button {
-  justify-content: center;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-.viewer-coords {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
-  background: rgba(10, 14, 20, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 4px 10px;
-  z-index: 10;
-  pointer-events: none;
-}
-.viewer-inspector {
-  width: 300px;
+.board-canvas-wrap canvas:active { cursor: grabbing; }
+
+.inspector-panel {
+  flex: 0 0 300px;
   background: var(--bg-card);
-  border-left: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
-  display: none;
-  flex-direction: column;
-  gap: 16px;
+  max-height: 650px;
 }
-.viewer-inspector.open {
-  display: flex;
-}
-.inspector-title {
+.inspector-panel h3 {
+  font-size: 0.82rem;
   font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+.inspector-empty {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 40px 0;
+}
+.inspector-ref {
   font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--cyan);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+.inspector-ref.fcu { color: var(--red); }
+.inspector-ref.bcu { color: #4488ff; }
+.inspector-value {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 16px;
 }
 .inspector-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.inspector-label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-.inspector-value {
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 0.85rem;
-  color: var(--text-primary);
-  word-break: break-all;
 }
-.inspector-layer {
-  display: flex;
+.inspector-row .lbl { color: var(--text-tertiary); }
+.inspector-row .val { color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.8rem; }
+.inspector-desc {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.inspector-btn {
+  margin-top: 12px;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-.inspector-layer-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.inspector-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  color: var(--cyan);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1.2rem;
-  padding: 4px;
+  transition: all 0.25s;
+  text-decoration: none;
 }
-.inspector-close:hover { color: var(--text-primary); }
+.inspector-btn:hover {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.5);
+}
+.inspector-pads {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
 
-/* ===================================================================
-   TAB 2: BOM TABLE
-   =================================================================== */
-.bom-panel {
-  flex-direction: column;
-  padding: 24px;
+.board-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
+  margin-bottom: 16px;
 }
-.bom-header {
+.layer-toggles {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.layer-toggle input[type="checkbox"] {
+  accent-color: var(--cyan);
+  width: 14px;
+  height: 14px;
+}
+.zoom-controls {
+  display: flex;
+  gap: 6px;
+}
+.zoom-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.zoom-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.status-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.status-bar span { color: var(--text-secondary); }
+.status-bar .dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+/* =================================================================== */
+/* BOM TABLE                                                           */
+/* =================================================================== */
+.bom-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
 .bom-search {
   flex: 1;
   min-width: 200px;
-  max-width: 400px;
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 8px 14px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
   color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
   outline: none;
   transition: border-color 0.2s;
 }
-.bom-search:focus { border-color: var(--cyan); }
-.bom-search::placeholder { color: var(--text-tertiary); }
-.bom-stats {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  display: flex;
-  gap: 16px;
-}
-.bom-stats span { white-space: nowrap; }
-.bom-stats .stat-num { color: var(--cyan); font-weight: 600; }
-.bom-table-wrap {
-  flex: 1;
-  overflow: auto;
+.bom-search:focus { border-color: var(--border-hover); }
+.bom-search::placeholder { color: var(--text-dim); }
+
+.bom-select {
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  background: var(--bg-secondary);
+  padding: 8px 14px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+}
+.bom-select option { background: var(--bg-card); }
+
+.bom-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+.bom-toggle input { accent-color: var(--amber); }
+
+.bom-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.bom-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 18px;
+  text-align: center;
+}
+.bom-stat .num {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.bom-stat .num.amber { color: var(--amber); }
+.bom-stat .num.green { color: var(--green); }
+.bom-stat .num.red { color: var(--red); }
+.bom-stat .desc {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bom-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
 }
 .bom-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.82rem;
 }
-.bom-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
 .bom-table th {
   background: var(--bg-tertiary);
+  color: var(--text-tertiary);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  padding: 10px 12px;
+  padding: 10px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: color 0.15s;
 }
-.bom-table th:hover { color: var(--cyan); }
-.bom-table th .sort-arrow {
-  font-size: 0.6rem;
-  margin-left: 4px;
-  opacity: 0.4;
-}
-.bom-table th.sorted .sort-arrow { opacity: 1; color: var(--cyan); }
+.bom-table th:hover { color: var(--text-secondary); }
 .bom-table td {
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-bottom: 1px solid rgba(6, 182, 212, 0.04);
+  color: var(--text-secondary);
   vertical-align: middle;
 }
-.bom-table tr { transition: background 0.1s; }
-.bom-table tbody tr:hover { background: rgba(6, 182, 212, 0.04); }
-.bom-row-ic { background: rgba(6, 182, 212, 0.03); }
-.bom-row-power { background: rgba(245, 158, 11, 0.03); }
-.bom-row-connector { background: rgba(34, 197, 94, 0.03); }
-.bom-row-dnp td { opacity: 0.4; text-decoration: line-through; }
-.lcsc-digikey { color: var(--amber); font-weight: 500; }
-.lcsc-verify { color: var(--red); font-weight: 500; }
-.lcsc-valid { color: var(--green); }
-.lcsc-none { color: var(--text-dim); }
-
-/* ===================================================================
-   TAB 3: ARCHITECTURE
-   =================================================================== */
-.arch-panel {
-  flex-direction: column;
-  padding: 24px;
-  gap: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-.arch-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 24px;
-}
-.arch-section h3 {
+.bom-table tr:hover td { background: var(--bg-card-hover); }
+.bom-table .ref { font-family: var(--font-mono); color: var(--cyan); font-weight: 500; }
+.bom-table .lcsc-link {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--cyan);
-  margin-bottom: 16px;
+  font-size: 0.75rem;
+  color: var(--cyan-dim);
 }
-.arch-section svg {
-  width: 100%;
-  height: auto;
-}
-
-/* ===================================================================
-   TAB 4: RESEARCH
-   =================================================================== */
-.research-panel {
-  flex-direction: column;
-  padding: 24px 24px 60px 24px;
-  gap: 32px;
-  max-width: 900px;
-  margin: 0 auto;
-  width: 100%;
-}
-.research-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 24px;
-}
-.research-section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 4px;
-}
-.research-section h3 {
+.bom-table .lcsc-link:hover { color: var(--cyan-bright); }
+.badge-digikey {
+  display: inline-block;
+  background: var(--amber-glow);
+  color: var(--amber);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+.badge-verify {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.bom-section-header {
+  background: var(--bg-secondary) !important;
+}
+.bom-section-header td {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
   color: var(--cyan);
-  margin-bottom: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
 }
-.research-section p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.7;
-  margin-bottom: 12px;
+.dnp-row td { opacity: 0.4; text-decoration: line-through; }
+
+/* =================================================================== */
+/* SCHEMATICS                                                          */
+/* =================================================================== */
+.schematics-layout {
+  display: flex;
+  gap: 20px;
+  min-height: 600px;
 }
-.research-section p:last-child { margin-bottom: 0; }
-.research-section ul {
-  list-style: none;
-  padding: 0;
-  margin-bottom: 12px;
+.schem-sidebar {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.research-section ul li {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  padding: 4px 0 4px 16px;
-  position: relative;
+.schem-sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 12px 0 6px;
 }
-.research-section ul li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 12px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--cyan-dim);
-}
-.research-code {
-  background: var(--bg-secondary);
+.schem-btn {
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  padding: 16px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+  padding: 10px 14px;
   color: var(--text-secondary);
-  line-height: 1.8;
-  overflow-x: auto;
-  margin: 12px 0;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  display: block;
+  width: 100%;
 }
-.research-code .kw { color: var(--cyan); }
-.research-code .num { color: var(--amber); }
-.research-code .cmt { color: var(--text-dim); font-style: italic; }
-.research-highlight {
+.schem-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+.schem-btn.active {
+  border-color: var(--cyan);
   color: var(--cyan);
-  font-weight: 500;
+  background: rgba(6, 182, 212, 0.06);
 }
-.research-amber {
-  color: var(--amber);
-  font-weight: 500;
+.schem-viewer {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
-.ref-list {
-  font-family: var(--font-mono);
+.schem-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+}
+.schem-zoom-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 6px;
   font-size: 0.75rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.ref-list li::before { background: var(--amber-dim) !important; }
-.timing-table {
+.schem-zoom-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.schem-zoom-btn.active { border-color: var(--cyan); color: var(--cyan); }
+.schem-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+.schem-content object,
+.schem-content .inline-diagram {
+  width: 100%;
+  min-height: 500px;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+.schem-content .inline-diagram {
+  background: var(--bg-secondary);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* =================================================================== */
+/* RESEARCH                                                            */
+/* =================================================================== */
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.research-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s var(--ease-smooth);
+}
+.research-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+.research-card .card-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.research-card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.research-card p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+
+.isr-timing {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+.isr-timing h3 {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+.isr-bar {
+  display: flex;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.isr-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--bg-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+}
+.isr-segment:hover { filter: brightness(1.2); }
+.isr-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+.isr-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.isr-legend .dot-cyan { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); }
+.isr-legend .dot-amber { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+.isr-legend .dot-dim { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+
+.control-cascade {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+}
+.control-cascade h3 {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+/* =================================================================== */
+/* DOCUMENTATION                                                       */
+/* =================================================================== */
+.doc-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.doc-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px 18px;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.doc-link:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+.doc-link .icon {
+  font-size: 1.3rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cyan-glow);
+  border-radius: 8px;
+  color: var(--cyan);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.doc-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.doc-section-header {
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s;
+}
+.doc-section-header:hover { background: var(--bg-card-hover); }
+.doc-section-header h4 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin: 0;
+}
+.doc-section-header .chevron {
+  color: var(--text-dim);
+  transition: transform 0.3s;
+  font-size: 0.8rem;
+}
+.doc-section.open .chevron { transform: rotate(180deg); }
+.doc-section-body {
+  display: none;
+  padding: 0 20px 20px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.doc-section.open .doc-section-body { display: block; }
+.doc-section-body code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--cyan);
+}
+.doc-section-body table {
   width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
   font-size: 0.82rem;
 }
-.timing-table th {
+.doc-section-body th {
   background: var(--bg-tertiary);
+  color: var(--text-tertiary);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  padding: 8px 10px;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border-subtle);
 }
-.timing-table td {
-  padding: 6px 10px;
+.doc-section-body td {
+  padding: 8px 12px;
   border-bottom: 1px solid rgba(6, 182, 212, 0.04);
-  color: var(--text-secondary);
 }
-.timing-table .timing-us {
+
+.papers-list { margin-top: 32px; }
+.papers-list h3 {
   font-family: var(--font-mono);
-  color: var(--amber);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+.paper-item {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.04);
+}
+.paper-item:last-child { border-bottom: none; }
+.paper-item .paper-title {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+}
+.paper-item .paper-meta {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* =================================================================== */
+/* INLINE SVG DIAGRAMS                                                 */
+/* =================================================================== */
+.diagram-foc-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.foc-block {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid;
+  min-width: 80px;
+}
+.foc-arrow {
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  margin: 0 2px;
+}
+
+.layer-stackup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 500px;
+  width: 100%;
+}
+.stackup-layer {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 500;
 }
+.stackup-layer .sname { flex: 1; }
+.stackup-layer .sthick { color: var(--text-dim); }
 
-/* ===================================================================
-   SCROLLBAR
-   =================================================================== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+/* =================================================================== */
+/* TOOLTIP                                                             */
+/* =================================================================== */
+.board-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  background: rgba(10, 14, 20, 0.95);
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  display: none;
+  backdrop-filter: blur(8px);
+  max-width: 200px;
+}
+.board-tooltip .tt-ref { color: var(--cyan); font-weight: 700; }
+.board-tooltip .tt-val { color: var(--text-secondary); }
 
-/* ===================================================================
-   RESPONSIVE
-   =================================================================== */
-@media (max-width: 768px) {
-  .header { padding: 0 12px; gap: 12px; }
-  .header-title { display: none; }
-  .tab-btn { padding: 6px 10px; font-size: 0.65rem; }
-  .viewer-inspector { width: 240px; }
-  .bom-panel, .arch-panel, .research-panel { padding: 16px; }
+/* =================================================================== */
+/* RESPONSIVE                                                          */
+/* =================================================================== */
+@media (max-width: 900px) {
+  .board-viewer { flex-direction: column; }
+  .inspector-panel { flex: none; max-height: 300px; }
+  .board-canvas-wrap { max-height: 450px; }
+  .board-canvas-wrap canvas { height: 450px; }
+  .schematics-layout { flex-direction: column; }
+  .schem-sidebar { flex: none; flex-direction: row; overflow-x: auto; gap: 6px; }
+  .schem-sidebar-label { display: none; }
+  .schem-btn { white-space: nowrap; min-width: max-content; }
+}
+@media (max-width: 600px) {
+  .tab-btn { padding: 12px 12px; font-size: 0.7rem; }
+  .bom-stats { gap: 8px; }
+  .bom-stat { padding: 8px 12px; }
+  .bom-stat .num { font-size: 1.1rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- ================================================================
-     HEADER
-     ================================================================ -->
-<header class="header">
-  <a href="index.html" class="header-logo" title="Back to KIL Home">
-    <svg viewBox="0 0 32 32" fill="none">
-      <rect x="2" y="2" width="28" height="28" rx="6" stroke="#06b6d4" stroke-width="1.5" fill="none"/>
-      <path d="M9 8v16M9 16l7-8M9 16l7 8" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="22" cy="16" r="4" stroke="#06b6d4" stroke-width="1.5" fill="rgba(6,182,212,0.1)"/>
-      <line x1="22" y1="12" x2="22" y2="20" stroke="#06b6d4" stroke-width="1" stroke-linecap="round"/>
-      <line x1="18" y1="16" x2="26" y2="16" stroke="#06b6d4" stroke-width="1" stroke-linecap="round"/>
-    </svg>
-    <span class="header-logo-text">KIL</span>
-  </a>
-  <span class="header-title">TITAN_FOC v9.1</span>
-  <nav class="header-tabs">
+<!-- NAVIGATION -->
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">KIL</div>
+      Kinetic Intelligence Lab
+    </a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#products">Products</a></li>
+      <li><a href="index.html#research">Research</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header__inner">
+    <p class="label" style="margin-bottom:8px">TITAN_FOC v9.1</p>
+    <h1><span>TITAN</span>_FOC Board Explorer</h1>
+    <p>STM32G474 FOC motor controller &mdash; 20 kHz current loop, DRV8353FS gate driver, 5 Mbps CAN-FD</p>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-bar__inner">
     <button class="tab-btn active" data-tab="viewer">Board Viewer</button>
     <button class="tab-btn" data-tab="bom">BOM</button>
-    <button class="tab-btn" data-tab="architecture">Architecture</button>
+    <button class="tab-btn" data-tab="schematics">Schematics</button>
     <button class="tab-btn" data-tab="research">Research</button>
-  </nav>
-</header>
-
-<!-- ================================================================
-     MAIN
-     ================================================================ -->
-<main class="main">
-
-<!-- ================================================================
-     TAB 1: BOARD VIEWER
-     ================================================================ -->
-<div id="tab-viewer" class="tab-panel viewer-panel active">
-  <div class="viewer-canvas-wrap">
-    <canvas id="pcb-canvas"></canvas>
-    <div class="viewer-toolbar">
-      <label><input type="checkbox" id="layer-fcu" checked> <span style="color:#ef4444;">&#9632;</span> F.Cu</label>
-      <label><input type="checkbox" id="layer-bcu" checked> <span style="color:#3b82f6;">&#9632;</span> B.Cu</label>
-      <button id="reset-view">Reset View</button>
-    </div>
-    <div class="viewer-coords" id="coords">X: 0.00 mm &nbsp; Y: 0.00 mm</div>
+    <button class="tab-btn" data-tab="docs">Documentation</button>
   </div>
-  <div class="viewer-inspector" id="inspector">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div class="inspector-title" id="insp-ref">--</div>
-      <button class="inspector-close" id="insp-close" title="Close">&times;</button>
+</div>
+
+<!-- ================================================================ -->
+<!-- TAB 1: BOARD VIEWER                                              -->
+<!-- ================================================================ -->
+<div class="tab-panel active" id="panel-viewer">
+<div class="tab-content">
+
+<div class="board-controls">
+  <div class="layer-toggles">
+    <label class="layer-toggle"><input type="checkbox" id="layer-fcu" checked> F.Cu</label>
+    <label class="layer-toggle"><input type="checkbox" id="layer-bcu" checked> B.Cu</label>
+    <label class="layer-toggle"><input type="checkbox" id="layer-silk" checked> Silkscreen</label>
+    <label class="layer-toggle"><input type="checkbox" id="zone-gnd"> GND Zone</label>
+    <label class="layer-toggle"><input type="checkbox" id="zone-vbat"> VBAT Zone</label>
+    <label class="layer-toggle"><input type="checkbox" id="zone-5v"> +5V Zone</label>
+    <label class="layer-toggle"><input type="checkbox" id="zone-3v3"> +3V3 Zone</label>
+  </div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" id="zoom-fit">Fit</button>
+    <button class="zoom-btn" id="zoom-in">+</button>
+    <button class="zoom-btn" id="zoom-out">&minus;</button>
+    <button class="zoom-btn" id="zoom-reset">Reset</button>
+  </div>
+</div>
+
+<div class="board-viewer">
+  <div class="board-canvas-wrap">
+    <canvas id="board-canvas"></canvas>
+  </div>
+  <div class="inspector-panel" id="inspector">
+    <h3>Component Inspector</h3>
+    <div class="inspector-empty" id="inspector-empty">Click a component to inspect</div>
+    <div id="inspector-content" style="display:none"></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span>229 components</span>
+  <div class="dot"></div>
+  <span>146 nets</span>
+  <div class="dot"></div>
+  <span>6 layers</span>
+  <div class="dot"></div>
+  <span>65.7mm diameter</span>
+  <div class="dot"></div>
+  <span id="zoom-display">Zoom: 1.0x</span>
+</div>
+
+</div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="board-tooltip" id="board-tooltip">
+  <div class="tt-ref"></div>
+  <div class="tt-val"></div>
+</div>
+
+<!-- ================================================================ -->
+<!-- TAB 2: BOM                                                       -->
+<!-- ================================================================ -->
+<div class="tab-panel" id="panel-bom">
+<div class="tab-content">
+
+<div class="bom-stats" id="bom-stats"></div>
+
+<div class="bom-toolbar">
+  <input type="text" class="bom-search" id="bom-search" placeholder="Search components...">
+  <select class="bom-select" id="bom-group">
+    <option value="flat">Flat</option>
+    <option value="section">By Section</option>
+  </select>
+  <label class="bom-toggle"><input type="checkbox" id="bom-dnp"> Show DNP</label>
+</div>
+
+<div class="bom-table-wrap">
+  <table class="bom-table" id="bom-table">
+    <thead>
+      <tr>
+        <th data-sort="comment">Part</th>
+        <th data-sort="designator">Designator</th>
+        <th data-sort="footprint">Footprint</th>
+        <th data-sort="qty">Qty</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody id="bom-body"></tbody>
+  </table>
+</div>
+
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- TAB 3: SCHEMATICS                                                -->
+<!-- ================================================================ -->
+<div class="tab-panel" id="panel-schematics">
+<div class="tab-content">
+<div class="schematics-layout">
+  <div class="schem-sidebar">
+    <div class="schem-sidebar-label">Schematic Sheets</div>
+    <button class="schem-btn active" data-schem="block-diagram">Block Diagram</button>
+    <button class="schem-btn" data-schem="top-level">Top Level</button>
+    <button class="schem-btn" data-schem="mcu-ios">MCU - I/Os</button>
+    <button class="schem-btn" data-schem="power-generation">Power Generation</button>
+    <button class="schem-btn" data-schem="power-sequencing">Power Sequencing</button>
+    <button class="schem-btn" data-schem="interconnects">Interconnects</button>
+    <button class="schem-btn" data-schem="sensing-temperature">Sensing - Temp</button>
+    <button class="schem-btn" data-schem="architecture">Architecture</button>
+    <button class="schem-btn" data-schem="misc-holes">Misc - Holes</button>
+    <button class="schem-btn" data-schem="revision-history">Revision History</button>
+    <div class="schem-sidebar-label" style="margin-top:12px">Diagrams</div>
+    <button class="schem-btn" data-diagram="foc-pipeline">FOC Pipeline</button>
+    <button class="schem-btn" data-diagram="control-cascade">Control Cascade</button>
+    <button class="schem-btn" data-diagram="layer-stackup">Layer Stackup</button>
+  </div>
+  <div class="schem-viewer">
+    <div class="schem-viewer-toolbar">
+      <button class="schem-zoom-btn active" data-zoom="fit">Fit</button>
+      <button class="schem-zoom-btn" data-zoom="100">100%</button>
+      <button class="schem-zoom-btn" data-zoom="150">150%</button>
+      <button class="schem-zoom-btn" data-zoom="200">200%</button>
     </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Value</span>
-      <span class="inspector-value" id="insp-value">--</span>
+    <div class="schem-content" id="schem-content">
+      <object data="schematics/block-diagram.svg" type="image/svg+xml" style="width:100%;height:100%;min-height:500px;background:white;border-radius:0 0 8px 8px;" id="schem-object">
+        SVG not available
+      </object>
     </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Footprint</span>
-      <span class="inspector-value mono" id="insp-fp" style="font-size:0.75rem;">--</span>
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Position</span>
-      <span class="inspector-value mono" id="insp-pos" style="font-size:0.78rem;">--</span>
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Rotation</span>
-      <span class="inspector-value mono" id="insp-rot">--</span>
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Layer</span>
-      <span class="inspector-value inspector-layer" id="insp-layer">
-        <span class="inspector-layer-dot" id="insp-layer-dot"></span>
-        <span id="insp-layer-text">--</span>
-      </span>
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Function</span>
-      <span class="inspector-value" id="insp-func">--</span>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- TAB 4: RESEARCH                                                  -->
+<!-- ================================================================ -->
+<div class="tab-panel" id="panel-research">
+<div class="tab-content">
+
+<p class="label label--amber" style="margin-bottom:8px">Adaptive Actuator Intelligence</p>
+<h2 style="margin-bottom:32px">AAI Research</h2>
+
+<div class="research-grid">
+  <div class="research-card">
+    <div class="card-tag" style="color:var(--cyan)">C1 &mdash; Core Innovation</div>
+    <h3>Learned Compensator</h3>
+    <p>Lightweight neural network running inside the 20 kHz FOC ISR. Learns friction maps, cogging torque profiles, and nonlinear dynamics in real time to produce feed-forward compensation current that the PI controller never has to chase.</p>
+  </div>
+  <div class="research-card">
+    <div class="card-tag" style="color:var(--amber)">C2 &mdash; Online Learning</div>
+    <h3>Online Micro-Learning</h3>
+    <p>Continuous weight updates driven by prediction error between the NN output and measured torque disturbance. Uses a fixed-point Q15.16 inference path with rank-1 gradient updates that fit within the ISR timing budget.</p>
+  </div>
+  <div class="research-card">
+    <div class="card-tag" style="color:var(--green)">C3 &mdash; Impedance Control</div>
+    <h3>Impedance Shaping</h3>
+    <p>Variable stiffness and damping profiles for contact-rich tasks. The AAI layer modulates virtual spring-damper parameters based on interaction force estimates, enabling compliant behavior without dedicated force/torque sensors.</p>
+  </div>
+  <div class="research-card">
+    <div class="card-tag" style="color:var(--red)">C4 &mdash; Sim-to-Real</div>
+    <h3>Sim-to-Real Bridge</h3>
+    <p>NVIDIA IsaacSim domain randomization pipeline that trains policies across thousands of randomized motor parameters (friction, inertia, backlash, thermal), then deploys quantized weights directly to the STM32 CORDIC-accelerated inference engine.</p>
+  </div>
+</div>
+
+<div class="isr-timing">
+  <h3>ISR Timing Budget &mdash; 20 kHz (50 &micro;s)</h3>
+  <div class="isr-bar">
+    <div class="isr-segment" style="flex:1;background:var(--cyan-dim)" title="ADC Sampling: 1.0us">ADC</div>
+    <div class="isr-segment" style="flex:0.2;background:#0e9ec4" title="Clarke Transform: 0.2us">Clk</div>
+    <div class="isr-segment" style="flex:0.3;background:#11a8cc" title="Park Transform: 0.3us">Prk</div>
+    <div class="isr-segment" style="flex:3;background:var(--amber)" title="Neural Network: 3.0us">NN (3us)</div>
+    <div class="isr-segment" style="flex:0.5;background:#14b4d4" title="PI Controllers: 0.5us">PI</div>
+    <div class="isr-segment" style="flex:0.3;background:#17bfdc" title="Inverse Park: 0.3us">iPrk</div>
+    <div class="isr-segment" style="flex:0.5;background:#1acae4" title="SVPWM: 0.5us">SVM</div>
+    <div class="isr-segment" style="flex:0.1;background:#1dd5ec" title="PWM Update: 0.1us">PW</div>
+    <div class="isr-segment" style="flex:4.1;background:var(--bg-tertiary);color:var(--text-dim)" title="Unused: 44.1us">unused (44.1us)</div>
+  </div>
+  <div class="isr-legend">
+    <span><div class="dot-cyan"></div> FOC Pipeline</span>
+    <span><div class="dot-amber"></div> AAI Neural Network (novel)</span>
+    <span><div class="dot-dim"></div> Unused headroom</span>
+  </div>
+</div>
+
+<div class="control-cascade">
+  <h3>Control Cascade Architecture</h3>
+  <div style="display:flex;justify-content:center;padding:20px 0">
+    <div style="border:2px solid var(--green);border-radius:14px;padding:20px 28px;text-align:center">
+      <div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--green);font-weight:600">Position Loop @ 1 kHz</div>
+      <div style="margin-top:14px;border:2px solid var(--amber);border-radius:12px;padding:16px 24px">
+        <div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--amber);font-weight:600">Velocity Loop @ 5 kHz</div>
+        <div style="margin-top:12px;border:2px solid var(--cyan);border-radius:10px;padding:14px 20px">
+          <div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--cyan);font-weight:600">Current Loop @ 20 kHz</div>
+          <div style="margin-top:10px;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-dim)">
+            FOC &rarr; SVPWM &rarr; PWM &rarr; Motor
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ================================================================
-     TAB 2: BOM
-     ================================================================ -->
-<div id="tab-bom" class="tab-panel bom-panel">
-  <div class="bom-header">
-    <input type="text" class="bom-search" id="bom-search" placeholder="Search components...">
-    <div class="bom-stats" id="bom-stats"></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- TAB 5: DOCUMENTATION                                             -->
+<!-- ================================================================ -->
+<div class="tab-panel" id="panel-docs">
+<div class="tab-content">
+
+<h2 style="margin-bottom:24px">Documentation</h2>
+
+<div class="doc-links">
+  <a href="https://spacecadetj.github.io/kil-website/" class="doc-link" target="_blank">
+    <div class="icon">W</div>
+    KIL Website
+  </a>
+  <a href="https://github.com/SpaceCadetJ/kil-website" class="doc-link" target="_blank">
+    <div class="icon">G</div>
+    GitHub Repository
+  </a>
+  <a href="mailto:jckrisel@uark.edu" class="doc-link">
+    <div class="icon">@</div>
+    jckrisel@uark.edu
+  </a>
+</div>
+
+<h3 style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px">Technical Documentation</h3>
+
+<div class="doc-section" id="doc-power">
+  <div class="doc-section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h4>Power Architecture</h4>
+    <span class="chevron">&#9660;</span>
   </div>
-  <div class="bom-table-wrap">
-    <table class="bom-table" id="bom-table">
-      <thead>
-        <tr>
-          <th data-col="0">Comment <span class="sort-arrow">&#9650;</span></th>
-          <th data-col="1">Designator <span class="sort-arrow">&#9650;</span></th>
-          <th data-col="2">Qty <span class="sort-arrow">&#9650;</span></th>
-          <th data-col="3">Footprint <span class="sort-arrow">&#9650;</span></th>
-          <th data-col="4">LCSC <span class="sort-arrow">&#9650;</span></th>
-        </tr>
-      </thead>
-      <tbody id="bom-body"></tbody>
+  <div class="doc-section-body">
+    <p>Three-stage power conversion from 48V battery input:</p>
+    <table>
+      <tr><th>Stage</th><th>IC</th><th>Input</th><th>Output</th><th>Type</th></tr>
+      <tr><td>1</td><td><code>U2</code> LMR36506</td><td>48V VBAT</td><td>5V @ 600mA</td><td>Buck (560kHz)</td></tr>
+      <tr><td>2</td><td><code>U4</code> TPS62172</td><td>5V</td><td>3.3V @ 500mA</td><td>Buck (2MHz)</td></tr>
+      <tr><td>3</td><td><code>U5</code> LP2992</td><td>3.3V</td><td>A3.3V @ 250mA</td><td>LDO (analog)</td></tr>
+    </table>
+    <p style="margin-top:12px">The analog 3.3V rail (A3.3V) from U5 feeds the ADC reference and current sense amplifier references. It is isolated from digital 3.3V via ferrite beads FB1-FB4 to minimize switching noise coupling.</p>
+  </div>
+</div>
+
+<div class="doc-section" id="doc-stackup">
+  <div class="doc-section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h4>Layer Stackup</h4>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="doc-section-body">
+    <p>6-layer controlled-impedance stackup, 1.58mm total:</p>
+    <table>
+      <tr><th>Layer</th><th>Name</th><th>Thickness</th><th>Purpose</th></tr>
+      <tr><td>1</td><td><code>F.Cu</code></td><td>35 &micro;m</td><td>Signal + power, high-current traces</td></tr>
+      <tr><td>&mdash;</td><td>Prepreg</td><td>0.2mm</td><td>&mdash;</td></tr>
+      <tr><td>2</td><td><code>In1.Cu</code></td><td>17.5 &micro;m</td><td>GND plane (unbroken)</td></tr>
+      <tr><td>&mdash;</td><td>Core</td><td>0.36mm</td><td>&mdash;</td></tr>
+      <tr><td>3</td><td><code>In2.Cu</code></td><td>17.5 &micro;m</td><td>Power plane (VBAT, 5V, 3V3)</td></tr>
+      <tr><td>&mdash;</td><td>Prepreg</td><td>0.2mm</td><td>&mdash;</td></tr>
+      <tr><td>4</td><td><code>In3.Cu</code></td><td>17.5 &micro;m</td><td>Signal routing</td></tr>
+      <tr><td>&mdash;</td><td>Core</td><td>0.36mm</td><td>&mdash;</td></tr>
+      <tr><td>5</td><td><code>In4.Cu</code></td><td>17.5 &micro;m</td><td>GND plane</td></tr>
+      <tr><td>&mdash;</td><td>Prepreg</td><td>0.2mm</td><td>&mdash;</td></tr>
+      <tr><td>6</td><td><code>B.Cu</code></td><td>35 &micro;m</td><td>Signal + power, components</td></tr>
     </table>
   </div>
 </div>
 
-<!-- ================================================================
-     TAB 3: ARCHITECTURE
-     ================================================================ -->
-<div id="tab-architecture" class="tab-panel arch-panel">
-
-  <!-- Diagram 1: Hardware Block -->
-  <div class="arch-section">
-    <h3>Hardware Block Diagram</h3>
-    <svg viewBox="0 0 1000 340" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
-      <defs>
-        <marker id="ah-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#06b6d4"/></marker>
-        <marker id="ah-amber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f59e0b"/></marker>
-        <marker id="ah-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#22c55e"/></marker>
-      </defs>
-      <!-- VBAT Input -->
-      <rect x="20" y="130" width="100" height="60" rx="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="70" y="155" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">VBAT</text>
-      <text x="70" y="173" text-anchor="middle" fill="#8b95a8" font-size="9">12-48V XT60</text>
-      <!-- TVS -->
-      <rect x="155" y="130" width="80" height="60" rx="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="195" y="155" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">TVS</text>
-      <text x="195" y="173" text-anchor="middle" fill="#8b95a8" font-size="9">SMBJ51CD</text>
-      <line x1="120" y1="160" x2="155" y2="160" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah-amber)"/>
-      <!-- Inverter -->
-      <rect x="270" y="110" width="120" height="100" rx="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="330" y="140" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">3-Phase</text>
-      <text x="330" y="155" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">Inverter</text>
-      <text x="330" y="175" text-anchor="middle" fill="#8b95a8" font-size="9">6x TPW1R306PL</text>
-      <text x="330" y="190" text-anchor="middle" fill="#8b95a8" font-size="9">3x 0.5mOhm Shunt</text>
-      <line x1="235" y1="160" x2="270" y2="160" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah-amber)"/>
-      <!-- DRV8353 -->
-      <rect x="430" y="110" width="120" height="100" rx="6" fill="none" stroke="#06b6d4" stroke-width="1.5"/>
-      <text x="490" y="140" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">DRV8353FS</text>
-      <text x="490" y="158" text-anchor="middle" fill="#8b95a8" font-size="9">Gate Driver</text>
-      <text x="490" y="173" text-anchor="middle" fill="#8b95a8" font-size="9">+ 3x CSA</text>
-      <text x="490" y="188" text-anchor="middle" fill="#8b95a8" font-size="9">SPI2 (CS=PB6)</text>
-      <line x1="390" y1="150" x2="430" y2="150" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#ah-cyan)"/>
-      <line x1="430" y1="170" x2="390" y2="170" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah-amber)"/>
-      <text x="410" y="143" text-anchor="middle" fill="#8b95a8" font-size="8">GATE</text>
-      <text x="410" y="183" text-anchor="middle" fill="#8b95a8" font-size="8">SENSE</text>
-      <!-- STM32 -->
-      <rect x="590" y="90" width="160" height="140" rx="6" fill="none" stroke="#06b6d4" stroke-width="1.5"/>
-      <text x="670" y="120" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="700">STM32G474RET</text>
-      <text x="670" y="140" text-anchor="middle" fill="#8b95a8" font-size="9">Cortex-M4F 170MHz</text>
-      <text x="670" y="158" text-anchor="middle" fill="#8b95a8" font-size="9">FOC ISR @ 20kHz</text>
-      <text x="670" y="176" text-anchor="middle" fill="#8b95a8" font-size="9">CORDIC + ADC</text>
-      <text x="670" y="194" text-anchor="middle" fill="#8b95a8" font-size="9">TIM1 3x PWM</text>
-      <text x="670" y="212" text-anchor="middle" fill="#8b95a8" font-size="9">CCMRAM FOC State</text>
-      <line x1="550" y1="160" x2="590" y2="160" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#ah-cyan)"/>
-      <!-- Motor -->
-      <rect x="430" y="260" width="120" height="60" rx="6" fill="none" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="490" y="285" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">BLDC Motor</text>
-      <text x="490" y="303" text-anchor="middle" fill="#8b95a8" font-size="9">3-Phase + NTC</text>
-      <line x1="330" y1="210" x2="330" y2="290" stroke="#f59e0b" stroke-width="1.5"/>
-      <line x1="330" y1="290" x2="430" y2="290" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah-amber)"/>
-      <text x="370" y="283" text-anchor="middle" fill="#8b95a8" font-size="8">A,B,C</text>
-      <!-- Encoder -->
-      <rect x="590" y="270" width="140" height="55" rx="6" fill="none" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="660" y="293" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">AS5047P</text>
-      <text x="660" y="310" text-anchor="middle" fill="#8b95a8" font-size="9">14-bit SPI2 (CS=PB5)</text>
-      <line x1="670" y1="230" x2="670" y2="270" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#ah-cyan)"/>
-      <!-- CAN -->
-      <rect x="810" y="100" width="130" height="55" rx="6" fill="none" stroke="#06b6d4" stroke-width="1.5"/>
-      <text x="875" y="122" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">TCAN1051H</text>
-      <text x="875" y="140" text-anchor="middle" fill="#8b95a8" font-size="9">CAN-FD Transceiver</text>
-      <line x1="750" y1="130" x2="810" y2="130" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#ah-cyan)"/>
-      <!-- CAN Bus -->
-      <rect x="810" y="175" width="130" height="45" rx="6" fill="none" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="875" y="198" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="500">CAN Bus A/B</text>
-      <text x="875" y="212" text-anchor="middle" fill="#8b95a8" font-size="8">Nano-Fit Daisy-chain</text>
-      <line x1="875" y1="155" x2="875" y2="175" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#ah-cyan)"/>
-      <!-- Power Regulators -->
-      <rect x="155" y="20" width="240" height="80" rx="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="275" y="42" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">Power Regulation</text>
-      <text x="275" y="60" text-anchor="middle" fill="#8b95a8" font-size="9">LMR36506: 48V to 5V</text>
-      <text x="275" y="75" text-anchor="middle" fill="#8b95a8" font-size="9">TPS62172: 5V to 3.3V</text>
-      <text x="275" y="90" text-anchor="middle" fill="#8b95a8" font-size="9">LP2992: 3.3V to A3.3V (LDO)</text>
-      <line x1="70" y1="130" x2="70" y2="55" stroke="#f59e0b" stroke-width="1.5"/>
-      <line x1="70" y1="55" x2="155" y2="55" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah-amber)"/>
-      <line x1="395" y1="55" x2="590" y2="130" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah-amber)"/>
-      <text x="500" y="82" text-anchor="middle" fill="#8b95a8" font-size="8">3.3V, A3.3V</text>
-      <!-- SWD -->
-      <rect x="810" y="240" width="130" height="45" rx="6" fill="none" stroke="#06b6d4" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="875" y="262" text-anchor="middle" fill="#06b6d4" font-size="10">SWD Debug</text>
-      <text x="875" y="276" text-anchor="middle" fill="#8b95a8" font-size="8">JST-GH 5-pin</text>
-      <line x1="750" y1="200" x2="780" y2="260" stroke="#06b6d4" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah-cyan)"/>
-    </svg>
+<div class="doc-section" id="doc-pinmap">
+  <div class="doc-section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h4>Pin Map (Key Signals)</h4>
+    <span class="chevron">&#9660;</span>
   </div>
-
-  <!-- Diagram 2: FOC Pipeline -->
-  <div class="arch-section">
-    <h3>FOC Signal Pipeline (20 kHz ISR)</h3>
-    <svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
-      <defs>
-        <marker id="a2c" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#06b6d4"/></marker>
-        <marker id="a2a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f59e0b"/></marker>
-        <marker id="a2g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#22c55e"/></marker>
-      </defs>
-      <!-- Forward Path -->
-      <text x="500" y="22" text-anchor="middle" fill="#5a6478" font-size="10" font-weight="500">FORWARD PATH (command)</text>
-      <!-- Encoder -->
-      <rect x="20" y="40" width="90" height="50" rx="5" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.2"/>
-      <text x="65" y="60" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Encoder</text>
-      <text x="65" y="76" text-anchor="middle" fill="#8b95a8" font-size="8">AS5047P</text>
-      <!-- theta -->
-      <line x1="110" y1="65" x2="150" y2="65" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <text x="130" y="58" text-anchor="middle" fill="#8b95a8" font-size="8">theta_e</text>
-      <!-- Park -->
-      <rect x="150" y="40" width="90" height="50" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="195" y="60" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">Park</text>
-      <text x="195" y="76" text-anchor="middle" fill="#8b95a8" font-size="8">CORDIC</text>
-      <line x1="240" y1="65" x2="280" y2="65" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <!-- PI d -->
-      <rect x="280" y="30" width="90" height="30" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="325" y="50" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">PI_d</text>
-      <!-- PI q -->
-      <rect x="280" y="65" width="90" height="30" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="325" y="85" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">PI_q</text>
-      <!-- Learned Compensator injection -->
-      <rect x="290" y="115" width="110" height="50" rx="5" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,3"/>
-      <text x="345" y="135" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="600">AAI Compensator</text>
-      <text x="345" y="150" text-anchor="middle" fill="#8b95a8" font-size="8">dVd, dVq (Q15)</text>
-      <line x1="345" y1="115" x2="345" y2="95" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#a2a)"/>
-      <text x="360" y="108" fill="#f59e0b" font-size="7">inject</text>
-      <!-- Sum -->
-      <circle cx="400" cy="55" r="12" fill="none" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="400" y="59" text-anchor="middle" fill="#06b6d4" font-size="14">+</text>
-      <line x1="370" y1="45" x2="388" y2="52" stroke="#06b6d4" stroke-width="1.5"/>
-      <line x1="370" y1="80" x2="388" y2="60" stroke="#06b6d4" stroke-width="1.5"/>
-      <!-- Inv Park -->
-      <line x1="412" y1="55" x2="445" y2="55" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <rect x="445" y="30" width="105" height="50" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="498" y="52" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">Inv. Park</text>
-      <text x="498" y="68" text-anchor="middle" fill="#8b95a8" font-size="8">CORDIC</text>
-      <!-- SVPWM -->
-      <line x1="550" y1="55" x2="590" y2="55" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <rect x="590" y="30" width="100" height="50" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="640" y="52" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">SVPWM</text>
-      <text x="640" y="68" text-anchor="middle" fill="#8b95a8" font-size="8">TIM1 CH1-3</text>
-      <!-- DRV+Motor -->
-      <line x1="690" y1="55" x2="730" y2="55" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#a2a)"/>
-      <rect x="730" y="30" width="100" height="50" rx="5" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.2"/>
-      <text x="780" y="52" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">DRV8353</text>
-      <text x="780" y="68" text-anchor="middle" fill="#8b95a8" font-size="8">Gate Drive</text>
-      <line x1="830" y1="55" x2="870" y2="55" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#a2a)"/>
-      <rect x="870" y="30" width="100" height="50" rx="5" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.2"/>
-      <text x="920" y="52" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Motor</text>
-      <text x="920" y="68" text-anchor="middle" fill="#8b95a8" font-size="8">BLDC</text>
-
-      <!-- Feedback Path -->
-      <text x="500" y="210" text-anchor="middle" fill="#5a6478" font-size="10" font-weight="500">FEEDBACK PATH (measurement)</text>
-      <!-- ADC -->
-      <rect x="700" y="220" width="100" height="50" rx="5" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.2"/>
-      <text x="750" y="242" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">ADC 1/2</text>
-      <text x="750" y="258" text-anchor="middle" fill="#8b95a8" font-size="8">Ia, Ib, Vbus</text>
-      <!-- Shunts to ADC -->
-      <line x1="920" y1="80" x2="920" y2="245" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2"/>
-      <line x1="920" y1="245" x2="800" y2="245" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#a2a)"/>
-      <text x="860" y="238" text-anchor="middle" fill="#8b95a8" font-size="8">CSA out</text>
-      <!-- Clarke -->
-      <line x1="700" y1="245" x2="610" y2="245" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <rect x="500" y="220" width="110" height="50" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="555" y="242" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">Clarke</text>
-      <text x="555" y="258" text-anchor="middle" fill="#8b95a8" font-size="8">Ia,Ib -> Ialpha,Ibeta</text>
-      <!-- Park feedback -->
-      <line x1="500" y1="245" x2="410" y2="245" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <rect x="280" y="220" width="130" height="50" rx="5" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="345" y="242" text-anchor="middle" fill="#06b6d4" font-size="10" font-weight="600">Park (fdbk)</text>
-      <text x="345" y="258" text-anchor="middle" fill="#8b95a8" font-size="8">Ialpha,Ibeta -> Id,Iq</text>
-      <!-- Back to PI -->
-      <line x1="345" y1="220" x2="345" y2="180" stroke="#06b6d4" stroke-width="1" stroke-dasharray="3,2"/>
-      <line x1="345" y1="180" x2="290" y2="180" stroke="#06b6d4" stroke-width="1" stroke-dasharray="3,2"/>
-      <line x1="290" y1="180" x2="290" y2="95" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a2c)"/>
-      <text x="270" y="140" fill="#8b95a8" font-size="8" text-anchor="end">Id,Iq meas</text>
-    </svg>
-  </div>
-
-  <!-- Diagram 3: Control Cascade -->
-  <div class="arch-section">
-    <h3>Control Cascade</h3>
-    <svg viewBox="0 0 1000 180" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
-      <defs>
-        <marker id="a3c" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#06b6d4"/></marker>
-        <marker id="a3a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f59e0b"/></marker>
-      </defs>
-      <!-- Position -->
-      <rect x="30" y="50" width="140" height="70" rx="6" fill="rgba(6,182,212,0.05)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="100" y="73" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">Position Loop</text>
-      <text x="100" y="92" text-anchor="middle" fill="#8b95a8" font-size="9">PD + Feedforward</text>
-      <text x="100" y="108" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="500">1 kHz</text>
-      <line x1="170" y1="85" x2="220" y2="85" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a3c)"/>
-      <!-- Velocity -->
-      <rect x="220" y="50" width="140" height="70" rx="6" fill="rgba(6,182,212,0.07)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="290" y="73" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">Velocity Loop</text>
-      <text x="290" y="92" text-anchor="middle" fill="#8b95a8" font-size="9">PI + Anti-windup</text>
-      <text x="290" y="108" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="500">5 kHz</text>
-      <line x1="360" y1="85" x2="410" y2="85" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a3c)"/>
-      <!-- Current -->
-      <rect x="410" y="50" width="140" height="70" rx="6" fill="rgba(6,182,212,0.1)" stroke="#06b6d4" stroke-width="1.5"/>
-      <text x="480" y="73" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="700">Current Loop</text>
-      <text x="480" y="92" text-anchor="middle" fill="#8b95a8" font-size="9">PI_d + PI_q</text>
-      <text x="480" y="108" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="600">20 kHz</text>
-      <line x1="550" y1="85" x2="600" y2="85" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#a3c)"/>
-      <!-- FOC -->
-      <rect x="600" y="50" width="120" height="70" rx="6" fill="rgba(6,182,212,0.08)" stroke="#06b6d4" stroke-width="1.2"/>
-      <text x="660" y="73" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">FOC Core</text>
-      <text x="660" y="92" text-anchor="middle" fill="#8b95a8" font-size="9">Clarke/Park/SVPWM</text>
-      <text x="660" y="108" text-anchor="middle" fill="#8b95a8" font-size="9">TIM1 ISR</text>
-      <line x1="720" y1="85" x2="770" y2="85" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#a3a)"/>
-      <!-- Motor -->
-      <rect x="770" y="50" width="120" height="70" rx="6" fill="rgba(34,197,94,0.08)" stroke="#22c55e" stroke-width="1.2"/>
-      <text x="830" y="73" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">Motor</text>
-      <text x="830" y="92" text-anchor="middle" fill="#8b95a8" font-size="9">BLDC + Cycloidal</text>
-      <text x="830" y="108" text-anchor="middle" fill="#8b95a8" font-size="9">Gearbox</text>
-      <!-- Feedback lines -->
-      <line x1="830" y1="120" x2="830" y2="160" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2"/>
-      <line x1="830" y1="160" x2="100" y2="160" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2"/>
-      <line x1="100" y1="160" x2="100" y2="120" stroke="#06b6d4" stroke-width="1" stroke-dasharray="3,2"/>
-      <text x="460" y="155" text-anchor="middle" fill="#8b95a8" font-size="8">encoder + current feedback</text>
-      <!-- Impedance note -->
-      <rect x="30" y="5" width="160" height="30" rx="4" fill="rgba(245,158,11,0.05)" stroke="#f59e0b" stroke-width="0.8" stroke-dasharray="3,2"/>
-      <text x="110" y="24" text-anchor="middle" fill="#f59e0b" font-size="9">Impedance Mode (opt.)</text>
-      <line x1="110" y1="35" x2="110" y2="50" stroke="#f59e0b" stroke-width="0.8" stroke-dasharray="3,2"/>
-    </svg>
-  </div>
-
-  <!-- Diagram 4: Layer Stackup -->
-  <div class="arch-section">
-    <h3>6-Layer PCB Stackup</h3>
-    <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
-      <!-- Layer bars -->
-      <!-- F.Cu -->
-      <rect x="200" y="30" width="400" height="28" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1.5"/>
-      <text x="190" y="49" text-anchor="end" fill="#ef4444" font-size="11" font-weight="600">F.Cu</text>
-      <text x="400" y="49" text-anchor="middle" fill="#8b95a8" font-size="9">Signal + Power (components)</text>
-      <text x="610" y="49" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Prepreg -->
-      <rect x="200" y="58" width="400" height="14" rx="0" fill="rgba(90,100,120,0.1)"/>
-      <text x="400" y="70" text-anchor="middle" fill="#5a6478" font-size="7">Prepreg 0.11mm</text>
-      <!-- In1 GND -->
-      <rect x="200" y="72" width="400" height="28" rx="3" fill="rgba(34,197,94,0.12)" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="190" y="91" text-anchor="end" fill="#22c55e" font-size="11" font-weight="600">In1</text>
-      <text x="400" y="91" text-anchor="middle" fill="#8b95a8" font-size="9">GND (solid pour)</text>
-      <text x="610" y="91" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Core -->
-      <rect x="200" y="100" width="400" height="18" rx="0" fill="rgba(90,100,120,0.07)"/>
-      <text x="400" y="113" text-anchor="middle" fill="#5a6478" font-size="7">Core 0.36mm</text>
-      <!-- In2 VBAT -->
-      <rect x="200" y="118" width="400" height="28" rx="3" fill="rgba(245,158,11,0.12)" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="190" y="137" text-anchor="end" fill="#f59e0b" font-size="11" font-weight="600">In2</text>
-      <text x="400" y="137" text-anchor="middle" fill="#8b95a8" font-size="9">VBAT Power Plane</text>
-      <text x="610" y="137" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Prepreg -->
-      <rect x="200" y="146" width="400" height="14" rx="0" fill="rgba(90,100,120,0.1)"/>
-      <text x="400" y="158" text-anchor="middle" fill="#5a6478" font-size="7">Prepreg 0.36mm</text>
-      <!-- In3 3V3 -->
-      <rect x="200" y="160" width="400" height="28" rx="3" fill="rgba(6,182,212,0.12)" stroke="#06b6d4" stroke-width="1.5"/>
-      <text x="190" y="179" text-anchor="end" fill="#06b6d4" font-size="11" font-weight="600">In3</text>
-      <text x="400" y="179" text-anchor="middle" fill="#8b95a8" font-size="9">3.3V Signal Power</text>
-      <text x="610" y="179" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Core -->
-      <rect x="200" y="188" width="400" height="18" rx="0" fill="rgba(90,100,120,0.07)"/>
-      <text x="400" y="201" text-anchor="middle" fill="#5a6478" font-size="7">Core 0.36mm</text>
-      <!-- In4 GND -->
-      <rect x="200" y="206" width="400" height="28" rx="3" fill="rgba(34,197,94,0.12)" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="190" y="225" text-anchor="end" fill="#22c55e" font-size="11" font-weight="600">In4</text>
-      <text x="400" y="225" text-anchor="middle" fill="#8b95a8" font-size="9">GND (solid pour)</text>
-      <text x="610" y="225" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Prepreg -->
-      <rect x="200" y="234" width="400" height="14" rx="0" fill="rgba(90,100,120,0.1)"/>
-      <text x="400" y="246" text-anchor="middle" fill="#5a6478" font-size="7">Prepreg 0.11mm</text>
-      <!-- B.Cu -->
-      <rect x="200" y="248" width="400" height="28" rx="3" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="1.5"/>
-      <text x="190" y="267" text-anchor="end" fill="#3b82f6" font-size="11" font-weight="600">B.Cu</text>
-      <text x="400" y="267" text-anchor="middle" fill="#8b95a8" font-size="9">Signal + Power (components)</text>
-      <text x="610" y="267" text-anchor="start" fill="#5a6478" font-size="9">35um (1oz)</text>
-      <!-- Total thickness -->
-      <line x1="640" y1="30" x2="640" y2="276" stroke="#5a6478" stroke-width="0.5" stroke-dasharray="2,2"/>
-      <line x1="636" y1="30" x2="644" y2="30" stroke="#5a6478" stroke-width="1"/>
-      <line x1="636" y1="276" x2="644" y2="276" stroke="#5a6478" stroke-width="1"/>
-      <text x="660" y="158" fill="#5a6478" font-size="9" font-weight="500">~1.6mm total</text>
-    </svg>
+  <div class="doc-section-body">
+    <table>
+      <tr><th>Pin</th><th>Function</th><th>Peripheral</th></tr>
+      <tr><td><code>PA8</code></td><td>PWM Phase A</td><td>TIM1_CH1</td></tr>
+      <tr><td><code>PA9</code></td><td>PWM Phase B</td><td>TIM1_CH2</td></tr>
+      <tr><td><code>PA10</code></td><td>PWM Phase C</td><td>TIM1_CH3</td></tr>
+      <tr><td><code>PB12</code></td><td>SPI2 NSS (DRV)</td><td>SPI2_NSS</td></tr>
+      <tr><td><code>PB13</code></td><td>SPI2 SCK</td><td>SPI2_SCK</td></tr>
+      <tr><td><code>PB14</code></td><td>SPI2 MISO</td><td>SPI2_MISO</td></tr>
+      <tr><td><code>PB15</code></td><td>SPI2 MOSI</td><td>SPI2_MOSI</td></tr>
+      <tr><td><code>PB5</code></td><td>Encoder CS</td><td>GPIO (AS5047P)</td></tr>
+      <tr><td><code>PB6</code></td><td>DRV CS</td><td>GPIO (DRV8353FS)</td></tr>
+      <tr><td><code>PB8</code></td><td>CAN RX</td><td>FDCAN1_RX</td></tr>
+      <tr><td><code>PB9</code></td><td>CAN TX</td><td>FDCAN1_TX</td></tr>
+      <tr><td><code>PA13</code></td><td>SWDIO</td><td>SWD</td></tr>
+      <tr><td><code>PA14</code></td><td>SWCLK</td><td>SWD</td></tr>
+    </table>
   </div>
 </div>
 
-<!-- ================================================================
-     TAB 4: RESEARCH (AAI)
-     ================================================================ -->
-<div id="tab-research" class="tab-panel research-panel">
-
-  <div class="research-section">
-    <h3>The Problem</h3>
-    <h2>Why Standard FOC Falls Short for Robotics</h2>
-    <p>
-      Field-Oriented Control delivers smooth sinusoidal commutation, but real-world quasi-direct-drive actuators suffer from systematic disturbances that standard PI controllers cannot eliminate:
-    </p>
-    <ul>
-      <li><span class="research-highlight">Cogging torque</span> — Permanent magnet interaction with stator teeth creates position-dependent torque ripple (up to 5% of rated torque)</li>
-      <li><span class="research-highlight">Thermal drift</span> — Winding resistance increases ~0.4%/K, shifting PI operating points as the motor heats</li>
-      <li><span class="research-highlight">Gearbox friction</span> — Cycloidal reducers exhibit speed-dependent friction and backlash that varies with load direction</li>
-      <li><span class="research-highlight">Manufacturing variation</span> — Phase resistance and inductance mismatch between motors of the same SKU</li>
-    </ul>
-    <p>
-      These effects compound to a <span class="research-amber">32% cost-of-transport penalty</span> compared to a perfectly compensated drive. The Adaptive Actuator Intelligence (AAI) system eliminates these losses through on-device learning.
-    </p>
+<div class="doc-section" id="doc-traces">
+  <div class="doc-section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h4>Trace Width Guidelines</h4>
+    <span class="chevron">&#9660;</span>
   </div>
-
-  <div class="research-section">
-    <h3>AAI Architecture</h3>
-    <h2>ISR Timing Budget</h2>
-    <p>
-      The learned compensator executes inside the 20 kHz TIM1 update ISR. Every microsecond matters. The total budget is 50 us per cycle, with the FOC pipeline consuming approximately 28 us:
-    </p>
-    <table class="timing-table">
-      <thead>
-        <tr>
-          <th>Stage</th>
-          <th>Operation</th>
-          <th>Time</th>
-          <th>Cumulative</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td>ADC read + DMA transfer</td><td class="timing-us">1.2 us</td><td class="timing-us">1.2 us</td></tr>
-        <tr><td>2</td><td>SPI2 encoder read (AS5047P)</td><td class="timing-us">3.5 us</td><td class="timing-us">4.7 us</td></tr>
-        <tr><td>3</td><td>Clarke transform</td><td class="timing-us">0.4 us</td><td class="timing-us">5.1 us</td></tr>
-        <tr><td>4</td><td>Park transform (CORDIC)</td><td class="timing-us">0.8 us</td><td class="timing-us">5.9 us</td></tr>
-        <tr><td>5</td><td>PI_d + PI_q controllers</td><td class="timing-us">1.2 us</td><td class="timing-us">7.1 us</td></tr>
-        <tr><td>6</td><td style="color:var(--amber)">AAI compensator (Q15 NN)</td><td class="timing-us">4.8 us</td><td class="timing-us">11.9 us</td></tr>
-        <tr><td>7</td><td>Inverse Park (CORDIC)</td><td class="timing-us">0.8 us</td><td class="timing-us">12.7 us</td></tr>
-        <tr><td>8</td><td>SVPWM + TIM1 update</td><td class="timing-us">1.5 us</td><td class="timing-us">14.2 us</td></tr>
-        <tr><td>9</td><td>Telemetry + state logging</td><td class="timing-us">2.0 us</td><td class="timing-us">16.2 us</td></tr>
-      </tbody>
+  <div class="doc-section-body">
+    <table>
+      <tr><th>Category</th><th>Width</th><th>Usage</th></tr>
+      <tr><td>High Current</td><td><code>1.0mm</code></td><td>Phase outputs, VBAT distribution</td></tr>
+      <tr><td>Power</td><td><code>0.5mm</code></td><td>5V, 3V3 distribution</td></tr>
+      <tr><td>Gate Drive</td><td><code>0.3mm</code></td><td>Gate resistor to MOSFET gate</td></tr>
+      <tr><td>Signal</td><td><code>0.2mm</code></td><td>SPI, CAN, GPIO</td></tr>
+      <tr><td>Analog</td><td><code>0.2mm</code></td><td>Current sense, ADC inputs</td></tr>
     </table>
-    <p>
-      The AAI compensator sits between the Park transform and PI controllers, injecting correction voltages <span class="mono" style="color:var(--amber)">deltaVd</span> and <span class="mono" style="color:var(--amber)">deltaVq</span> into the dq-frame. This placement allows it to compensate for all disturbances simultaneously without disturbing the stability margins of the PI loops.
-    </p>
   </div>
-
-  <div class="research-section">
-    <h3>C1 &mdash; Self-Profiling</h3>
-    <h2>Automatic Motor Characterization</h2>
-    <p>
-      On first boot (or on command), the TITAN_FOC runs a comprehensive self-profiling sequence that measures the connected motor's electrical and mechanical parameters:
-    </p>
-    <ul>
-      <li><span class="research-highlight">Phase resistance (R)</span> — DC injection at multiple current levels, temperature-compensated via NTC</li>
-      <li><span class="research-highlight">Phase inductance (L_d, L_q)</span> — High-frequency injection at locked rotor, measured via current response slope</li>
-      <li><span class="research-highlight">Flux linkage (lambda_pm)</span> — Back-EMF measurement during constant-speed open-loop spin</li>
-      <li><span class="research-highlight">Cogging torque map</span> — 4096-bin position-indexed torque measurement (one full electrical revolution at 14-bit encoder resolution)</li>
-      <li><span class="research-highlight">Encoder offset</span> — Automatic alignment of electrical angle zero to encoder index</li>
-    </ul>
-    <p>
-      All parameters are stored in flash and used to initialize the PI gains, feedforward terms, and the AAI compensator's input normalization.
-    </p>
-    <div class="research-code">
-<span class="kw">typedef struct</span> {
-    <span class="kw">float</span> R_phase;          <span class="cmt">// Ohms, per-phase</span>
-    <span class="kw">float</span> L_d, L_q;         <span class="cmt">// Henries, dq-frame</span>
-    <span class="kw">float</span> lambda_pm;        <span class="cmt">// Wb, PM flux linkage</span>
-    <span class="kw">int16_t</span> cogging[<span class="num">4096</span>]; <span class="cmt">// Q15 torque map</span>
-    <span class="kw">uint16_t</span> enc_offset;    <span class="cmt">// Encoder electrical zero</span>
-    <span class="kw">float</span> temp_ref;         <span class="cmt">// Reference temperature (C)</span>
-} motor_profile_t;
-    </div>
-  </div>
-
-  <div class="research-section">
-    <h3>C2 &mdash; Learned Compensator</h3>
-    <h2>Fixed-Point Neural Network</h2>
-    <p>
-      The core of AAI is a tiny neural network running entirely in fixed-point Q15.16 arithmetic on the Cortex-M4's integer pipeline. This avoids FPU contention with the main FOC float math:
-    </p>
-    <ul>
-      <li><span class="research-highlight">Inputs (5)</span> — theta_e (electrical angle), omega_e (electrical velocity), I_d, I_q, temperature</li>
-      <li><span class="research-highlight">Hidden layer</span> — 16 neurons, ReLU activation, Q15 weights</li>
-      <li><span class="research-highlight">Outputs (2)</span> — deltaV_d, deltaV_q correction voltages</li>
-      <li><span class="research-highlight">Execution</span> — Uses CORDIC for sin/cos lookup, all MAC operations in Q15, total latency under 5 us</li>
-    </ul>
-    <div class="research-code">
-<span class="cmt">// Q15 MAC: 16 neurons x 5 inputs = 80 multiply-accumulates</span>
-<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i < <span class="num">16</span>; i++) {
-    <span class="kw">int32_t</span> acc = bias[i];
-    <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j < <span class="num">5</span>; j++)
-        acc += (<span class="kw">int32_t</span>)w[i][j] * input[j];  <span class="cmt">// Q15 * Q15 = Q30</span>
-    hidden[i] = (acc > <span class="num">0</span>) ? (acc >> <span class="num">15</span>) : <span class="num">0</span>; <span class="cmt">// ReLU + Q30->Q15</span>
-}
-    </div>
-    <p>
-      Weights are trained offline via the Digital Twin (C3) and uploaded over CAN-FD. On-device fine-tuning uses a simplified online gradient descent with a learning rate of <span class="mono" style="color:var(--amber)">2^-12</span> to track slow parameter drift (thermal, wear).
-    </p>
-  </div>
-
-  <div class="research-section">
-    <h3>C3 &mdash; Digital Twin</h3>
-    <h2>CAN-FD Streaming Telemetry</h2>
-    <p>
-      Every TITAN_FOC node continuously streams its internal state over the CAN-FD bus, enabling a host computer to maintain a real-time digital twin of each actuator in the system:
-    </p>
-    <table class="timing-table">
-      <thead>
-        <tr>
-          <th>Channel</th>
-          <th>Data</th>
-          <th>Rate</th>
-          <th>Bytes/frame</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Position / Velocity</td><td>theta, omega (float32)</td><td class="timing-us">5 kHz</td><td>8</td></tr>
-        <tr><td>Current</td><td>I_d, I_q (float16)</td><td class="timing-us">2.5 kHz</td><td>4</td></tr>
-        <tr><td>Voltage</td><td>V_d, V_q, V_bus (float16)</td><td class="timing-us">1 kHz</td><td>6</td></tr>
-        <tr><td>Thermal</td><td>T_fet, T_motor (int16)</td><td class="timing-us">10 Hz</td><td>4</td></tr>
-        <tr><td>Diagnostics</td><td>Fault flags, uptime</td><td class="timing-us">1 Hz</td><td>8</td></tr>
-      </tbody>
-    </table>
-    <p>
-      The host-side twin runs a full motor model in simulation, replaying the telemetry to train the next iteration of the compensator weights. This sim-to-real loop converges in under 60 seconds of operation, reducing cogging ripple by <span class="research-amber">85%</span> and improving tracking bandwidth by <span class="research-amber">40%</span>.
-    </p>
-  </div>
-
-  <div class="research-section">
-    <h3>References</h3>
-    <ul class="ref-list">
-      <li>Wensing, P. M., Wang, A., Seok, S., Otten, D., Lang, J., &amp; Kim, S. (2017). Proprioceptive actuator design in the MIT Cheetah. <em>IEEE Trans. Robotics</em>, 33(3).</li>
-      <li>Katz, B. G. (2019). A low-cost modular actuator for dynamic robots. <em>MIT Master's Thesis</em>.</li>
-      <li>Liao, T., et al. (2024). Berkeley Humanoid: A research platform for locomotion. <em>arXiv:2410.16591</em>.</li>
-      <li>Miki, T., et al. (2024). Learning robust locomotion in diverse terrains. <em>Science Robotics</em>, 9.</li>
-    </ul>
-  </div>
-
 </div>
 
-</main>
+<div class="papers-list">
+  <h3>Papers &amp; References</h3>
+  <div class="paper-item">
+    <div class="paper-title">Proprioceptive Actuator Design in the MIT Cheetah: Impact Mitigation and High-Bandwidth Physical Interaction for Dynamic Legged Robots</div>
+    <div class="paper-meta">Wensing, Wang, Seok, Orekhov, Kim &mdash; IEEE T-RO, 2017</div>
+  </div>
+  <div class="paper-item">
+    <div class="paper-title">Mini Cheetah: A Platform for Pushing the Limits of Dynamic Quadruped Control</div>
+    <div class="paper-meta">Katz, Di Carlo, Kim &mdash; ICRA, 2019</div>
+  </div>
+  <div class="paper-item">
+    <div class="paper-title">Cycloidal Quasi-Direct-Drive Actuator with GRU-based Torque Estimation</div>
+    <div class="paper-meta">arXiv:2410.16591, 2024</div>
+  </div>
+  <div class="paper-item">
+    <div class="paper-title">Zero-shot Transformer-based Locomotion on Digit Humanoid</div>
+    <div class="paper-meta">Science Robotics, 2024</div>
+  </div>
+</div>
 
-<!-- ================================================================
-     JAVASCRIPT
-     ================================================================ -->
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- JAVASCRIPT                                                       -->
+<!-- ================================================================ -->
 <script>
-'use strict';
-
 // =================================================================
-// COMPONENT DATA
+// COMPONENT DATA - ALL 229 COMPONENTS
 // =================================================================
-// [ref, value, footprint, layer, x, y, rotation, function]
 const COMPONENTS = [
-["C1","4u7 X7R 16V","C_0603_1608_DensityHigh","B.Cu",96.9,121.5,0,"MCU decoupling"],
-["C2","1u X7R 10V","C_0402_1005_DensityHigh","F.Cu",98.4,117.5,180,"MCU decoupling"],
-["C3","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",98.4,119,180,"MCU decoupling"],
-["C4","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",97,120.5,180,"MCU decoupling"],
-["C5","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",96.5,122.5,180,"MCU decoupling"],
-["C6","1u X7R 10V","C_0402_1005_DensityHigh","B.Cu",99.4,124.5,0,"MCU decoupling"],
-["C7","4u7 X5R 25V","C_0402_1005_DensityHigh","B.Cu",99.4,126.5,0,"MCU decoupling"],
-["C8","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",112,118.5,0,"CAN decoupling"],
-["C9","1u X7R 10V","C_0402_1005_DensityHigh","B.Cu",112,120,0,"CAN decoupling"],
-["C10","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",101.9,124.5,0,"MCU decoupling"],
-["C11","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",101.9,126.5,0,"MCU decoupling"],
-["C12","1n X7R 25V","C_0402_1005_DensityHigh","F.Cu",109,112.5,-45,"DRV decoupling"],
-["C13","1n X7R 25V","C_0402_1005_DensityHigh","F.Cu",108.28,113.28,-45,"DRV decoupling"],
-["C14","1n X7R 25V","C_0402_1005_DensityHigh","F.Cu",107.5,114,-45,"DRV decoupling"],
-["C15","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",78,112,-90,"VBAT input"],
-["C16","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",79.5,115,-90,"VBAT input"],
-["C17","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",84,115,90,"VBAT input"],
-["C18","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",83.5,109,-90,"12V Buck (DNP)"],
-["C19","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",86.4,107.5,0,"12V Buck (DNP)"],
-["C20","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",84,118,90,"VBAT input"],
-["C21","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",86.4,110,0,"12V Buck (DNP)"],
-["C22","100n X7R 100V","C_0603_1608_DensityHigh","F.Cu",86.5,115,0,"VBAT bypass"],
-["C23","220n X7S 100V","C_0603_1608_DensityHigh","F.Cu",86.5,108,0,"12V Buck (DNP)"],
-["C24","1u X7R 10V","C_0402_1005_DensityHigh","F.Cu",93.5,116.5,0,"5V reg decoupling"],
-["C25","220n X7S 100V","C_0603_1608_DensityHigh","F.Cu",86.5,110,0,"12V Buck (DNP)"],
-["C26","1u X7R 10V","C_0402_1005_DensityHigh","F.Cu",95.5,110.5,0,"12V Buck (DNP)"],
-["C27","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",93.5,113.5,0,"5V reg decoupling"],
-["C28","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",95.5,107.5,0,"12V Buck (DNP)"],
-["C29","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",99.5,114,0,"5V reg output"],
-["C30","15u X7R 25V","C_1210_3225_DensityHigh","B.Cu",99.4,107.5,0,"12V Buck (DNP)"],
-["C31","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79.1,93,180,"VBAT bulk Phase A"],
-["C32","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79,95,180,"VBAT bulk Phase A"],
-["C33","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79,97,180,"VBAT bulk Phase A"],
-["C34","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",83.5,97,0,"VBAT bulk Phase A"],
-["C35","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",83.4,95,0,"VBAT bulk Phase A"],
-["C36","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",83.4,93,0,"VBAT bulk Phase A"],
-["C37","22u X7R 10V","C_0805_2012_DensityHighest","B.Cu",96.9,114.5,0,"5V output bulk"],
-["C38","15u X7R 25V","C_1210_3225_DensityHigh","B.Cu",99.4,110,0,"12V Buck (DNP)"],
-["C39","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",83.4,91,0,"VBAT bulk Phase A"],
-["C40","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",83.4,89,0,"VBAT bulk Phase A"],
-["C41","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",133,86.82,0,"VBAT bulk Phase C"],
-["C42","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",99.1,86.56,0,"VBAT bulk Phase B"],
-["C43","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",99.1,84.51,0,"VBAT bulk Phase B"],
-["C44","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",99.1,82.51,0,"VBAT bulk Phase B"],
-["C45","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",98,115.9,90,"VBAT input"],
-["C46","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",99.1,80.51,0,"VBAT bulk Phase B"],
-["C47","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79.1,89,180,"VBAT bulk Phase A"],
-["C48","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79.1,91,180,"VBAT bulk Phase A"],
-["C49","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",99.1,86.45,180,"VBAT bulk Phase B"],
-["C50","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",99.1,84.45,180,"VBAT bulk Phase B"],
-["C51","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",99.1,82.45,180,"VBAT bulk Phase B"],
-["C52","2u2 X7R 100V","R_0805_2012_DensityHigh","F.Cu",86.5,121,90,"VBAT input"],
-["C53","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",99.1,80.45,180,"VBAT bulk Phase B"],
-["C54","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",133.53,90.77,0,"VBAT bulk Phase C"],
-["C55","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",133.5,94,0,"VBAT bulk Phase C"],
-["C56","10u X7R 25V","C_0805_2012_DensityHighest","B.Cu",86.4,120.5,0,"5V reg input"],
-["C57","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",133.5,92.27,0,"VBAT bulk Phase C"],
-["C58","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",133.5,90.27,0,"VBAT bulk Phase C"],
-["C59","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",133.5,88.27,0,"VBAT bulk Phase C"],
-["C60","1u X7R 25V","C_0603_1608_DensityHigh","F.Cu",114.25,110.5,90,"CAN decoupling"],
-["C61","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",132.97,86.27,0,"VBAT bulk Phase C"],
-["C62","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",113,80.95,0,"VBAT bulk Phase B"],
-["C63","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",113,82.95,0,"VBAT bulk Phase B"],
-["C64","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",113,84.95,0,"VBAT bulk Phase B"],
-["C65","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",113,86.95,0,"VBAT bulk Phase B"],
-["C66","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",129.5,88.77,180,"VBAT bulk Phase C"],
-["C67","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",133.53,88.77,0,"VBAT bulk Phase C"],
-["C68","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",128.98,88.8,180,"VBAT bulk Phase C"],
-["C69","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",128.97,90.53,180,"VBAT bulk Phase C"],
-["C70","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",128.98,92.53,180,"VBAT bulk Phase C"],
-["C71","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",128.98,94.53,180,"VBAT bulk Phase C"],
-["C72","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",128.97,96.53,180,"VBAT bulk Phase C"],
-["C73","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",79.3,91,180,"VBAT bulk Phase A"],
-["C74","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",79.3,89,180,"VBAT bulk Phase A"],
-["C75","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",79.3,86.95,180,"VBAT bulk Phase A"],
-["C76","10n X7R 100V","C_0402_1005_DensityHigh","F.Cu",96.5,127.5,0,"LDO decoupling"],
-["C77","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",83.9,88.95,0,"VBAT bulk Phase A"],
-["C78","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",83.9,91,0,"VBAT bulk Phase A"],
-["C79","4u7 X7R 100V","C_1206_3216_DensityHigh","F.Cu",129.5,90.77,180,"VBAT bulk Phase C"],
-["C80","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",113,80.79,180,"VBAT bulk Phase B"],
-["C81","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",113,82.89,180,"VBAT bulk Phase B"],
-["C82","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",113,84.89,180,"VBAT bulk Phase B"],
-["C83","22u X7R 10V","C_0805_2012_DensityHighest","B.Cu",96.9,119.5,0,"5V output bulk"],
-["C84","4u7 X7R 16V","C_0603_1608_DensityHigh","F.Cu",109,111,-45,"DRV DVDD decoupling"],
-["C85","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",113,86.89,180,"VBAT bulk Phase B"],
-["C86","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",133.43,96.29,0,"VBAT bulk Phase C"],
-["C87","4u7 X7R 100V","C_1206_3216_DensityHigh","B.Cu",79.1,87,180,"VBAT bulk Phase A"],
-["C88","1u X7R 25V","C_0603_1608_DensityHigh","F.Cu",102,103.5,-45,"DRV decoupling"],
-["C89","4u7 X7R 100V","C_1206_3216_DensityHighest","B.Cu",133.5,98,0,"VBAT bulk Phase C"],
-["C90","100n X7R 16V","C_0402_1005_DensityHigh","F.Cu",112,112,0,"CAN decoupling"],
-["C91","47n X7R 100V","C_0603_1608_DensityHigh","F.Cu",104,101.5,135,"Encoder filter"],
-["C92","100n X7R 100V","C_0603_1608_DensityHigh","F.Cu",103,102.5,135,"Encoder filter"],
-["C93","1u X7R 25V","C_0603_1608_DensityHigh","F.Cu",107.92,102.08,45,"DRV decoupling"],
-["C94","1u X7R 6.3V","C_0402_1005_DensityHigh","F.Cu",108.5,103,45,"DRV decoupling"],
-["C95","100n X7R 100V","C_1206_3216_DensityHighest","B.Cu",91.5,95.95,90,"Phase A bypass"],
-["C96","4u7 X7R 100V","C_1206_3216_DensityHighest","B.Cu",78.95,101,180,"VBAT bulk Phase A"],
-["C97","100n X7R 100V","C_1206_3216_DensityHighest","B.Cu",103,96,0,"Phase B bypass"],
-["C98","4u7 X7R 100V","C_1206_3216_DensityHighest","B.Cu",78.95,99,180,"VBAT bulk Phase A"],
-["C99","100n X7R 100V","C_1206_3216_DensityHighest","B.Cu",119.5,95.5,90,"Phase C bypass"],
-["C100","4u7 X7R 100V","C_1206_3216_DensityHighest","B.Cu",117,98.5,-90,"VBAT bulk Phase C"],
-["C101","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",112,121.5,0,"CAN decoupling"],
-["C102","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",112,124.5,0,"MCU decoupling"],
-["C103","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",112,127.5,0,"MCU decoupling"],
-["C104","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",112,117.5,0,"CAN decoupling"],
-["C108","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",96.4,117.5,0,"MCU decoupling"],
-["C109","100n X7R 50V","C_0402_1005_DensityHigh","B.Cu",94,118,0,"MCU decoupling"],
-["C127","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",120,111.5,-90,"CAN decoupling"],
-["C128","100n X7R 50V","C_0402_1005_DensityHigh","F.Cu",101,117,135,"MCU decoupling"],
-["C129","4n7 X7R 100V","C_0402_1005_DensityHigh","F.Cu",121.25,112,-90,"CAN filter"],
-["C130","1n X7R 1kV","C_0603_1608_DensityHigh","B.Cu",85,103,0,"Phase A HV filter"],
-["C131","1n X7R 1kV","C_0603_1608_DensityHigh","B.Cu",97.1,102,0,"Phase B HV filter"],
-["C132","1n X7R 1kV","C_0603_1608_DensityHigh","B.Cu",123,100.5,0,"Phase C HV filter"],
-["C133","3n3 X7R 100V","C_0402_1005_DensityHigh","B.Cu",96.4,92.5,180,"CSA filter A"],
-["C134","3n3 X7R 100V","C_0402_1005_DensityHigh","B.Cu",110.1,92,180,"CSA filter B"],
-["C135","3n3 X7R 100V","C_0402_1005_DensityHigh","B.Cu",125.9,94,180,"CSA filter C"],
-["C136","3n3 X7R 100V","C_0402_1005_DensityHigh","F.Cu",96.4,94,0,"CSA filter A"],
-["C137","3n3 X7R 100V","C_0402_1005_DensityHigh","F.Cu",110.1,94.5,0,"CSA filter B"],
-["C138","3n3 X7R 100V","C_0402_1005_DensityHigh","F.Cu",123.6,94,0,"CSA filter C"],
-["D1","SMBJ51CD-M3/H","D_SMB","B.Cu",100.664,74.373,90,"Input TVS Diode A"],
-["D2","SMBJ51CD-M3/H","D_SMB","B.Cu",112.664,74.373,90,"Input TVS Diode B"],
-["D3","BAT41KFILM","D_SOD-523","B.Cu",88.5,92.5,180,"Gate clamp A-HS"],
-["D4","BAT41KFILM","D_SOD-523","F.Cu",88.5,88.5,0,"Gate clamp A-HS"],
-["D5","BAT41KFILM","D_SOD-523","B.Cu",88.5,94,0,"Gate clamp A-LS"],
-["D6","BAT41KFILM","D_SOD-523","B.Cu",101.5,91,180,"Gate clamp B-HS"],
-["D7","BAT41KFILM","D_SOD-523","F.Cu",101.725,89,0,"Gate clamp B-HS"],
-["D8","BAT41KFILM","D_SOD-523","B.Cu",101.5,92.5,0,"Gate clamp B-LS"],
-["D9","BAT41KFILM","D_SOD-523","B.Cu",115.35,91.5,180,"Gate clamp C-HS"],
-["D10","BAT41KFILM","D_SOD-523","F.Cu",116,89,0,"Gate clamp C-HS"],
-["D11","BAT41KFILM","D_SOD-523","B.Cu",115.35,92.5,0,"Gate clamp C-LS"],
-["D12","YELLOW","LED_SM1206","F.Cu",136.5,98,90,"Debug LED"],
-["D13","GREEN","LED_SM1206","F.Cu",136.5,103,90,"Power LED"],
-["D14","BAT41KFILM","D_SOD-523","B.Cu",112,123,0,"CAN clamp"],
-["D15","BAT41KFILM","D_SOD-523","B.Cu",112,126,0,"CAN clamp"],
-["D24","PESD2CANFD24V-UX","SOT-323_SC-70","B.Cu",112,108.75,0,"CAN ESD protection"],
-["D25","PESD2CANFD24V-UX","SOT-323_SC-70","B.Cu",112,111.75,0,"CAN ESD protection"],
-["D26","PESD4USB3U-TBSX","SOT1176D","F.Cu",112.825,117,180,"SWD ESD protection"],
-["FB1","1k @ 100MHz","R_0805_2012_DensityHigh","B.Cu",96.4,125.5,0,"VDDA ferrite bead"],
-["FB2","1k @ 100MHz","R_0805_2012_DensityHigh","F.Cu",81,115,-90,"5V input filter"],
-["FB3","1k @ 100MHz","R_0805_2012_DensityHigh","F.Cu",81,109,-90,"12V filter (DNP)"],
-["FB4","1k @ 100MHz","R_0805_2012_DensityHigh","F.Cu",84,121,90,"3.3V input filter"],
-["H1","M3","MountingHole_3.2mm_M3_Pad_Via","F.Cu",82,81,0,"Mounting hole"],
-["H1b","M3","MountingHole_3.2mm_M3_Pad_Via","F.Cu",128.5,80,0,"Mounting hole"],
-["H2","M3","MountingHole_3.2mm_M3_Pad_Via","F.Cu",76,106.5,0,"Mounting hole"],
-["H3","M3","MountingHole_3.2mm_M3_Pad_Via","F.Cu",128,121.5,0,"Mounting hole"],
-["J2","XT60PW-M","AMASS_XT60PW-M_1x02_P7.20mm_Horizontal","F.Cu",102.09,75.47,0,"Battery input (VBAT)"],
-["J3","Phase A","Pad_Square_Vias_6.5x6.5mm","F.Cu",91.55,82.91,0,"Motor Phase A pad"],
-["J4","Phase B","Pad_Square_Vias_6.5x6.5mm","F.Cu",106,82.95,0,"Motor Phase B pad"],
-["J5","Phase C","Pad_Square_Vias_6.5x6.5mm","F.Cu",120.45,82.9,0,"Motor Phase C pad"],
-["J8","S2B-PH-SM4-TB","JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal","F.Cu",120.5,124,33,"Motor NTC connector"],
-["J11","PTH 01x03 2.54mm","PTH_1x03_P2.54mm","F.Cu",125.955,100.5,90,"Debug header"],
-["J12","Nano-Fit 1x03","1054301203","F.Cu",92.5,73,180,"CAN Bus A"],
-["J13","Nano-Fit 1x03","1054301203","F.Cu",119.5,73,180,"CAN Bus B"],
-["J14","SM05B-GHS-TB","JST_GH_SM05B-GHS-TB_1x05-1MP_P1.25mm_Horizontal","F.Cu",131.5,114.5,60,"SWD Debug header"],
-["L1","22u","L_Coilcraft_LPS4018","B.Cu",93.4,114.5,0,"5V buck inductor"],
-["L2","22u","L_Coilcraft_LPS4018","B.Cu",95.4,108.5,0,"12V buck inductor (DNP)"],
-["L3","2u2","L_Coilcraft_LPS3314","B.Cu",93.4,120.5,0,"3.3V buck inductor"],
-["NT1","FB_5V","NetTie-2_SMD_Pad0.2mm","B.Cu",88.4,118.5,0,"5V star ground tie"],
-["NT2","FB_12V","NetTie-2_SMD_Pad0.2mm","B.Cu",90.4,112.5,0,"12V star ground (DNP)"],
-["NT3","VOS_3V3","NetTie-2_SMD_Pad0.2mm","B.Cu",88.4,123,0,"3.3V star ground tie"],
-["NT4","SRC_HS_A","NetTie-2_SMD_Pad0.4mm","F.Cu",93,97,0,"Phase A source tie"],
-["NT5","SHNTA_P","NetTie-2_SMD_Pad0.2mm","F.Cu",93,98.5,0,"Phase A shunt+ tie"],
-["NT6","SHNTA_N","NetTie-2_SMD_Pad0.2mm","F.Cu",93,100,0,"Phase A shunt- tie"],
-["NT7","SRC_HS_B","NetTie-2_SMD_Pad0.3mm","F.Cu",109.8,88,0,"Phase B source tie"],
-["NT8","SHNTB_P","NetTie-2_SMD_Pad0.2mm","B.Cu",106,96.5,180,"Phase B shunt+ tie"],
-["NT9","SHNTB_N","NetTie-2_SMD_Pad0.2mm","F.Cu",109.5,96.5,0,"Phase B shunt- tie"],
-["NT10","SRC_HS_C","NetTie-2_SMD_Pad0.4mm","F.Cu",119.85,97,0,"Phase C source tie"],
-["NT11","SHNTC_P","NetTie-2_SMD_Pad0.2mm","F.Cu",119.85,98.5,0,"Phase C shunt+ tie"],
-["NT12","SHNTC_N","NetTie-2_SMD_Pad0.2mm","F.Cu",119.85,100,0,"Phase C shunt- tie"],
-["NT13","NTC_MOT_H","NetTie-2_SMD_Pad0.2mm","F.Cu",115,121,0,"NTC high tie"],
-["NT14","NTC_MOT_L","NetTie-2_SMD_Pad0.2mm","F.Cu",115,122.5,0,"NTC low tie"],
-["Q1","TPW1R306PL,L1Q","2-5S1A","F.Cu",92.575,90.5,-90,"HS FET Phase A"],
-["Q2","TPW1R306PL,L1Q","2-5S1A","B.Cu",92.5,89.5,90,"LS FET Phase A"],
-["Q3","TPW1R306PL,L1Q","2-5S1A","F.Cu",106.075,90.6,-90,"HS FET Phase B"],
-["Q4","TPW1R306PL,L1Q","2-5S1A","B.Cu",105.925,89.55,90,"LS FET Phase B"],
-["Q5","TPW1R306PL,L1Q","2-5S1A","F.Cu",120,90.5,-90,"HS FET Phase C"],
-["Q6","TPW1R306PL,L1Q","2-5S1A","B.Cu",119.725,88.95,90,"LS FET Phase C"],
-["Q7","PMV90ENER","SOT-23-3","B.Cu",92.7,76.4,0,"CAN bus switch"],
-["Q8","PMV90ENER","SOT-23-3","B.Cu",120.7,76.4,0,"CAN bus switch"],
-["R1","22R 1%","R_0402_1005_DensityHigh","F.Cu",108.22,111.65,135,"DRV SPI resistor"],
-["R2","22R 1%","R_0402_1005_DensityHigh","F.Cu",107.5,112.5,135,"DRV SPI resistor"],
-["R3","22R 1%","R_0402_1005_DensityHigh","F.Cu",106.72,113.22,135,"DRV SPI resistor"],
-["R4","0R","R_0402_1005_DensityHigh","F.Cu",89,118,0,"5V feedback jumper"],
-["R5","100k 1%","R_0402_1005_DensityHigh","F.Cu",91,112,0,"12V FB upper (DNP)"],
-["R6","9k09 1%","R_0402_1005_DensityHigh","F.Cu",91,113.5,0,"12V FB lower (DNP)"],
-["R7","10k 1%","R_0402_1005_DensityHigh","F.Cu",89,119.5,0,"5V FB divider"],
-["R8","2k 1%","R_0402_1005_DensityHigh","F.Cu",109.5,110,135,"DRV config"],
-["R9","2k 1%","R_0402_1005_DensityHigh","F.Cu",110,109.5,135,"DRV config"],
-["R10","7R5 1% 1/2W","R_0805_2012_DensityHigh","F.Cu",88,90,180,"Gate R HS Phase A"],
-["R11","7R5 1% 1/2W","R_0805_2012_DensityHigh","B.Cu",88.6,95.5,0,"Gate R LS Phase A"],
-["R12","0m5 1% 2W","HCS1206FTL500","B.Cu",93.5,95.65,90,"Current shunt Phase A"],
-["R13","7R5 1% 1/2W","R_0805_2012_DensityHigh","F.Cu",101.5,90.5,0,"Gate R HS Phase B"],
-["R14","7R5 1% 1/2W","R_0805_2012_DensityHigh","B.Cu",102,94,0,"Gate R LS Phase B"],
-["R15","0m5 1% 2W","HCS1206FTL500","B.Cu",107.85,95,180,"Current shunt Phase B"],
-["R16","7R5 1% 1/2W","R_0805_2012_DensityHigh","F.Cu",115.4,90.5,0,"Gate R HS Phase C"],
-["R17","7R5 1% 1/2W","R_0805_2012_DensityHigh","B.Cu",115.5,94,0,"Gate R LS Phase C"],
-["R18","0m5 1% 2W","HCS1206FTL500","B.Cu",122,95.35,90,"Current shunt Phase C"],
-["R21","100k 1%","R_0402_1005_DensityHigh","F.Cu",133.5,96,0,"LED resistor"],
-["R22","100R 1% 1/5W","R_0402_1005_DensityHigh","F.Cu",133.5,97.5,0,"LED resistor"],
-["R23","100R 1% 1/5W","R_0402_1005_DensityHigh","F.Cu",133.5,99,0,"LED resistor"],
-["R24","100k 1%","R_0402_1005_DensityHigh","F.Cu",133.5,100.5,0,"Vbus divider upper"],
-["R25","100R 1% 1/5W","R_0402_1005_DensityHigh","F.Cu",133.5,102,0,"LED resistor"],
-["R26","150R 1% 1/5W","R_0402_1005_DensityHigh","F.Cu",133.5,103.5,0,"LED resistor"],
-["R27","10k 1%","R_0402_1005_DensityHigh","B.Cu",109,123,0,"NTC pull-up"],
-["R28","2k 1%","R_0402_1005_DensityHigh","B.Cu",109,124.5,0,"Vbus divider lower"],
-["R29","100k 1%","R_0402_1005_DensityHigh","B.Cu",109,127.5,0,"MCU pull-up"],
-["R30","4k7 1%","R_0402_1005_DensityHigh","B.Cu",109,129,0,"I2C pull-up"],
-["R31","0R","R_0402_1005_DensityHigh","B.Cu",112,116,0,"CAN jumper"],
-["R33","10k 1%","R_0402_1005_DensityHigh","B.Cu",115,112.75,0,"CAN standby pull-up"],
-["R50","60R4 1% 1/4W","R_0603_1608_DensityHigh","F.Cu",122,108.75,0,"CAN term split R1"],
-["R51","60R4 1% 1/4W","R_0603_1608_DensityHigh","F.Cu",122.5,111,0,"CAN term split R2"],
-["R52","0R","R_0603_1608_DensityHigh","B.Cu",85,101.5,0,"Phase A sense jumper"],
-["R53","0R","R_0603_1608_DensityHigh","B.Cu",97,100.5,0,"Phase B sense jumper"],
-["R54","0R","R_0603_1608_DensityHigh","B.Cu",123,102,0,"Phase C sense jumper"],
-["R55","5R 1% 0.4W","R_0603_1608_DensityHigh","B.Cu",96.65,93.5,0,"CSA input filter A"],
-["R56","5R 1% 0.4W","R_0603_1608_DensityHigh","B.Cu",110,93,0,"CSA input filter B"],
-["R57","5R 1% 0.4W","R_0603_1608_DensityHigh","B.Cu",124.85,98,180,"CSA input filter C"],
-["R58","5R 1% 0.4W","R_0603_1608_DensityHigh","F.Cu",96,95,180,"CSA input filter A"],
-["R59","5R 1% 0.4W","R_0603_1608_DensityHigh","F.Cu",109.85,95.5,180,"CSA input filter B"],
-["R60","5R 1% 0.4W","R_0603_1608_DensityHigh","F.Cu",123.35,95,180,"CSA input filter C"],
-["SW1","CAS-220TA","CAS-220A_NDC-L","F.Cu",118,115.5,0,"CAN termination switch"],
-["TH1","47k 1% NTC","R_0402_1005_DensityHigh","B.Cu",109,121.5,0,"FET temperature sensor"],
-["U1","STM32G474RET3","LQFP-64_10x10mm_P0.5mm","F.Cu",105.5,123,-45,"MCU -- Cortex-M4F 170MHz"],
-["U2","LMR36506MSC5RPERQ1","LMR36503","B.Cu",88.4,114.5,0,"5V Buck (48V to 5V)"],
-["U3","LMR36006FSCQ","LMR36006","B.Cu",90.4,108.5,0,"12V Buck (DNP)"],
-["U4","TPS62172DSG","WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm_ThermalVias","B.Cu",90.4,120.5,0,"3.3V Buck (5V to 3.3V)"],
-["U5","LP2992IM5-3.3/NOPB","SOT-23-5","B.Cu",91.4,125.5,0,"A3.3V Analog LDO"],
-["U6","DRV8353FS","WQFN-40-1EP_6x6mm_P0.5mm_EP4.15x4.15mm_ThermalVias","F.Cu",106,107.03,-45,"Gate Driver + 3x CSA"],
-["U7","AS5047P","TSSOP-14_4.4x5mm_P0.65mm","B.Cu",106.664,100.373,180,"14-bit Magnetic Encoder"],
-["U10","TCAN1051HGVDRBRQ1","HVSON-8-1EP_3x3mm_P0.65mm_EP1.6x2.4mm_ThermalVias","F.Cu",117.5,109.5,0,"CAN-FD Transceiver"],
+{ref:"C1",val:"4u7 X7R 16V",fp:"C_0603_1608_DensityHigh",layer:"B.Cu",x:96.9,y:121.5,rot:0},
+{ref:"C2",val:"1u X7R 10V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:98.4,y:117.5,rot:180},
+{ref:"C3",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:98.4,y:119,rot:180},
+{ref:"C4",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:97,y:120.5,rot:180},
+{ref:"C5",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:96.5,y:122.5,rot:180},
+{ref:"C6",val:"1u X7R 10V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:99.4,y:124.5,rot:0},
+{ref:"C7",val:"4u7 X5R 25V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:99.4,y:126.5,rot:0},
+{ref:"C8",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:118.5,rot:0},
+{ref:"C9",val:"1u X7R 10V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:120,rot:0},
+{ref:"C10",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:101.9,y:124.5,rot:0},
+{ref:"C11",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:101.9,y:126.5,rot:0},
+{ref:"C12",val:"1n X7R 25V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:109,y:112.5,rot:-45},
+{ref:"C13",val:"1n X7R 25V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:108.282843,y:113.282843,rot:-45},
+{ref:"C14",val:"1n X7R 25V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:107.5,y:114,rot:-45},
+{ref:"C15",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:78,y:112,rot:-90},
+{ref:"C16",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:79.5,y:115,rot:-90},
+{ref:"C17",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:84,y:115,rot:90},
+{ref:"C18",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:83.5,y:109,rot:-90},
+{ref:"C19",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:86.4,y:107.5,rot:0},
+{ref:"C20",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:84,y:118,rot:90},
+{ref:"C21",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:86.4,y:110,rot:0},
+{ref:"C22",val:"100n X7R 100V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:86.5,y:115,rot:0},
+{ref:"C23",val:"220n X7S 100V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:86.5,y:108,rot:0},
+{ref:"C24",val:"1u X7R 10V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:93.5,y:116.5,rot:0},
+{ref:"C25",val:"220n X7S 100V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:86.5,y:110,rot:0},
+{ref:"C26",val:"1u X7R 10V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:95.5,y:110.5,rot:0},
+{ref:"C27",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:93.5,y:113.5,rot:0},
+{ref:"C28",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:95.5,y:107.5,rot:0},
+{ref:"C29",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:99.5,y:114,rot:0},
+{ref:"C30",val:"15u X7R 25V",fp:"C_1210_3225_DensityHigh",layer:"B.Cu",x:99.4,y:107.5,rot:0},
+{ref:"C31",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79.1,y:93,rot:180},
+{ref:"C32",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79,y:95,rot:180},
+{ref:"C33",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79,y:97,rot:180},
+{ref:"C34",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:83.5,y:97,rot:0},
+{ref:"C35",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:83.4,y:95,rot:0},
+{ref:"C36",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:83.4,y:93,rot:0},
+{ref:"C37",val:"22u X7R 10V",fp:"C_0805_2012_DensityHighest",layer:"B.Cu",x:96.9,y:114.5,rot:0},
+{ref:"C38",val:"15u X7R 25V",fp:"C_1210_3225_DensityHigh",layer:"B.Cu",x:99.4,y:110,rot:0},
+{ref:"C39",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:83.4,y:91,rot:0},
+{ref:"C40",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:83.4,y:89,rot:0},
+{ref:"C41",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:133,y:86.823406,rot:0},
+{ref:"C42",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:99.1,y:86.56,rot:0},
+{ref:"C43",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:99.1,y:84.51,rot:0},
+{ref:"C44",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:99.1,y:82.51,rot:0},
+{ref:"C45",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:98,y:115.9,rot:90},
+{ref:"C46",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:99.1,y:80.51,rot:0},
+{ref:"C47",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79.1,y:89,rot:180},
+{ref:"C48",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79.1,y:91,rot:180},
+{ref:"C49",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:99.1,y:86.45,rot:180},
+{ref:"C50",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:99.1,y:84.45,rot:180},
+{ref:"C51",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:99.1,y:82.45,rot:180},
+{ref:"C52",val:"2u2 X7R 100V",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:86.5,y:121,rot:90},
+{ref:"C53",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:99.1,y:80.45,rot:180},
+{ref:"C54",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:133.533493,y:90.773406,rot:0},
+{ref:"C55",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:133.5,y:94,rot:0},
+{ref:"C56",val:"10u X7R 25V",fp:"C_0805_2012_DensityHighest",layer:"B.Cu",x:86.4,y:120.5,rot:0},
+{ref:"C57",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:133.5,y:92.273406,rot:0},
+{ref:"C58",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:133.5,y:90.273406,rot:0},
+{ref:"C59",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:133.5,y:88.273406,rot:0},
+{ref:"C60",val:"1u X7R 25V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:114.25,y:110.5,rot:90},
+{ref:"C61",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:132.966507,y:86.273406,rot:0},
+{ref:"C62",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:113,y:80.95,rot:0},
+{ref:"C63",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:113,y:82.95,rot:0},
+{ref:"C64",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:113,y:84.95,rot:0},
+{ref:"C65",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:113,y:86.95,rot:0},
+{ref:"C66",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:129.5,y:88.773406,rot:180},
+{ref:"C67",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:133.533493,y:88.773406,rot:0},
+{ref:"C68",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:128.983493,y:88.804694,rot:180},
+{ref:"C69",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:128.969109,y:90.531288,rot:180},
+{ref:"C70",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:128.983493,y:92.531288,rot:180},
+{ref:"C71",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:128.983493,y:94.531288,rot:180},
+{ref:"C72",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:128.969109,y:96.531288,rot:180},
+{ref:"C73",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:79.3,y:91,rot:180},
+{ref:"C74",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:79.3,y:89,rot:180},
+{ref:"C75",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:79.3,y:86.95,rot:180},
+{ref:"C76",val:"10n X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:96.5,y:127.5,rot:0},
+{ref:"C77",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:83.9,y:88.95,rot:0},
+{ref:"C78",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:83.9,y:91,rot:0},
+{ref:"C79",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"F.Cu",x:129.5,y:90.773406,rot:180},
+{ref:"C80",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:113,y:80.79,rot:180},
+{ref:"C81",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:113,y:82.89,rot:180},
+{ref:"C82",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:113,y:84.89,rot:180},
+{ref:"C83",val:"22u X7R 10V",fp:"C_0805_2012_DensityHighest",layer:"B.Cu",x:96.9,y:119.5,rot:0},
+{ref:"C84",val:"4u7 X7R 16V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:109,y:111,rot:-45},
+{ref:"C85",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:113,y:86.89,rot:180},
+{ref:"C86",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:133.434527,y:96.289132,rot:0},
+{ref:"C87",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHigh",layer:"B.Cu",x:79.1,y:87,rot:180},
+{ref:"C88",val:"1u X7R 25V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:102,y:103.5,rot:-45},
+{ref:"C89",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:133.5,y:98,rot:0},
+{ref:"C90",val:"100n X7R 16V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:112,y:112,rot:0},
+{ref:"C91",val:"47n X7R 100V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:104,y:101.5,rot:135},
+{ref:"C92",val:"100n X7R 100V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:103,y:102.5,rot:135},
+{ref:"C93",val:"1u X7R 25V",fp:"C_0603_1608_DensityHigh",layer:"F.Cu",x:107.924264,y:102.075736,rot:45},
+{ref:"C94",val:"1u X7R 6.3V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:108.5,y:103,rot:45},
+{ref:"C95",val:"100n X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:91.5,y:95.95,rot:90},
+{ref:"C96",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:78.95,y:101,rot:180},
+{ref:"C97",val:"100n X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:103,y:96,rot:0},
+{ref:"C98",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:78.95,y:99,rot:180},
+{ref:"C99",val:"100n X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:119.5,y:95.5,rot:90},
+{ref:"C100",val:"4u7 X7R 100V",fp:"C_1206_3216_DensityHighest",layer:"B.Cu",x:117,y:98.5,rot:-90},
+{ref:"C101",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:121.5,rot:0},
+{ref:"C102",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:124.5,rot:0},
+{ref:"C103",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:127.5,rot:0},
+{ref:"C104",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:117.5,rot:0},
+{ref:"C108",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:96.4,y:117.5,rot:0},
+{ref:"C109",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:94,y:118,rot:0},
+{ref:"C127",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:120,y:111.5,rot:-90},
+{ref:"C128",val:"100n X7R 50V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:101,y:117,rot:135},
+{ref:"C129",val:"4n7 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:121.25,y:112,rot:-90},
+{ref:"C130",val:"1n X7R 1kV",fp:"C_0603_1608_DensityHigh",layer:"B.Cu",x:85,y:103,rot:0},
+{ref:"C131",val:"1n X7R 1kV",fp:"C_0603_1608_DensityHigh",layer:"B.Cu",x:97.1,y:102,rot:0},
+{ref:"C132",val:"1n X7R 1kV",fp:"C_0603_1608_DensityHigh",layer:"B.Cu",x:123,y:100.5,rot:0},
+{ref:"C133",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:96.4,y:92.5,rot:180},
+{ref:"C134",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:110.1,y:92,rot:180},
+{ref:"C135",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"B.Cu",x:125.9,y:94,rot:180},
+{ref:"C136",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:96.4,y:94,rot:0},
+{ref:"C137",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:110.1,y:94.5,rot:0},
+{ref:"C138",val:"3n3 X7R 100V",fp:"C_0402_1005_DensityHigh",layer:"F.Cu",x:123.6,y:94,rot:0},
+{ref:"D1",val:"SMBJ51CD-M3/H",fp:"D_SMB",layer:"B.Cu",x:100.664,y:74.373,rot:90},
+{ref:"D2",val:"SMBJ51CD-M3/H",fp:"D_SMB",layer:"B.Cu",x:112.664,y:74.373,rot:90},
+{ref:"D3",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:88.5,y:92.5,rot:180},
+{ref:"D4",val:"BAT41KFILM",fp:"D_SOD-523",layer:"F.Cu",x:88.5,y:88.5,rot:0},
+{ref:"D5",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:88.5,y:94,rot:0},
+{ref:"D6",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:101.5,y:91,rot:180},
+{ref:"D7",val:"BAT41KFILM",fp:"D_SOD-523",layer:"F.Cu",x:101.725,y:89,rot:0},
+{ref:"D8",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:101.5,y:92.5,rot:0},
+{ref:"D9",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:115.35,y:91.5,rot:180},
+{ref:"D10",val:"BAT41KFILM",fp:"D_SOD-523",layer:"F.Cu",x:116,y:89,rot:0},
+{ref:"D11",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:115.35,y:92.5,rot:0},
+{ref:"D12",val:"YELLOW",fp:"LED_SM1206",layer:"F.Cu",x:136.5,y:98,rot:90},
+{ref:"D13",val:"GREEN",fp:"LED_SM1206",layer:"F.Cu",x:136.5,y:103,rot:90},
+{ref:"D14",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:112,y:123,rot:0},
+{ref:"D15",val:"BAT41KFILM",fp:"D_SOD-523",layer:"B.Cu",x:112,y:126,rot:0},
+{ref:"D24",val:"PESD2CANFD24V-UX",fp:"SOT-323_SC-70",layer:"B.Cu",x:112,y:108.75,rot:0},
+{ref:"D25",val:"PESD2CANFD24V-UX",fp:"SOT-323_SC-70",layer:"B.Cu",x:112,y:111.75,rot:0},
+{ref:"D26",val:"PESD4USB3U-TBSX",fp:"SOT1176D",layer:"F.Cu",x:112.825,y:117,rot:180},
+{ref:"FB1",val:"1k @ 100MHz",fp:"R_0805_2012_DensityHigh",layer:"B.Cu",x:96.4,y:125.5,rot:0},
+{ref:"FB2",val:"1k @ 100MHz",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:81,y:115,rot:-90},
+{ref:"FB3",val:"1k @ 100MHz",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:81,y:109,rot:-90},
+{ref:"FB4",val:"1k @ 100MHz",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:84,y:121,rot:90},
+{ref:"H1",val:"M3",fp:"MountingHole_3.2mm_M3_Pad_Via",layer:"F.Cu",x:82,y:81,rot:0},
+{ref:"H1",val:"M3",fp:"MountingHole_3.2mm_M3_Pad_Via",layer:"F.Cu",x:128.5,y:80,rot:0},
+{ref:"H2",val:"M3",fp:"MountingHole_3.2mm_M3_Pad_Via",layer:"F.Cu",x:76,y:106.5,rot:0},
+{ref:"H3",val:"M3",fp:"MountingHole_3.2mm_M3_Pad_Via",layer:"F.Cu",x:128,y:121.5,rot:0},
+{ref:"J2",val:"XT60PW-M",fp:"AMASS_XT60PW-M_1x02_P7.20mm_Horizontal",layer:"F.Cu",x:102.094384,y:75.473406,rot:0},
+{ref:"J3",val:"Phase A",fp:"Pad_Square_Vias_6.5x6.5mm",layer:"F.Cu",x:91.55,y:82.91,rot:0},
+{ref:"J4",val:"Phase B",fp:"Pad_Square_Vias_6.5x6.5mm",layer:"F.Cu",x:106,y:82.95,rot:0},
+{ref:"J5",val:"Phase C",fp:"Pad_Square_Vias_6.5x6.5mm",layer:"F.Cu",x:120.45,y:82.9,rot:0},
+{ref:"J8",val:"S2B-PH-SM4-TB",fp:"JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal",layer:"F.Cu",x:120.5,y:124,rot:33},
+{ref:"J11",val:"PTH 01x03 2.54mm",fp:"PTH_1x03_P2.54mm",layer:"F.Cu",x:125.955,y:100.5,rot:90},
+{ref:"J12",val:"Nano-Fit 1x03",fp:"1054301203",layer:"F.Cu",x:92.5,y:73,rot:180},
+{ref:"J13",val:"Nano-Fit 1x03",fp:"1054301203",layer:"F.Cu",x:119.5,y:73,rot:180},
+{ref:"J14",val:"SM05B-GHS-TB",fp:"JST_GH_SM05B-GHS-TB_1x05-1MP_P1.25mm_Horizontal",layer:"F.Cu",x:131.5,y:114.5,rot:60},
+{ref:"L1",val:"22u",fp:"L_Coilcraft_LPS4018",layer:"B.Cu",x:93.4,y:114.5,rot:0},
+{ref:"L2",val:"22u",fp:"L_Coilcraft_LPS4018",layer:"B.Cu",x:95.4,y:108.5,rot:0},
+{ref:"L3",val:"2u2",fp:"L_Coilcraft_LPS3314",layer:"B.Cu",x:93.4,y:120.5,rot:0},
+{ref:"NT1",val:"FB_5V",fp:"NetTie-2_SMD_Pad0.2mm",layer:"B.Cu",x:88.4,y:118.5,rot:0},
+{ref:"NT2",val:"FB_12V",fp:"NetTie-2_SMD_Pad0.2mm",layer:"B.Cu",x:90.4,y:112.5,rot:0},
+{ref:"NT3",val:"VOS_3V3",fp:"NetTie-2_SMD_Pad0.2mm",layer:"B.Cu",x:88.4,y:123,rot:0},
+{ref:"NT4",val:"SRC_HS_A",fp:"NetTie-2_SMD_Pad0.4mm",layer:"F.Cu",x:93,y:97,rot:0},
+{ref:"NT5",val:"SHNTA_P",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:93,y:98.5,rot:0},
+{ref:"NT6",val:"SHNTA_N",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:93,y:100,rot:0},
+{ref:"NT7",val:"SRC_HS_B",fp:"NetTie-2_SMD_Pad0.3mm",layer:"F.Cu",x:109.8,y:88,rot:0},
+{ref:"NT8",val:"SHNTB_P",fp:"NetTie-2_SMD_Pad0.2mm",layer:"B.Cu",x:106,y:96.5,rot:180},
+{ref:"NT9",val:"SHNTB_N",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:109.5,y:96.5,rot:0},
+{ref:"NT10",val:"SRC_HS_C",fp:"NetTie-2_SMD_Pad0.4mm",layer:"F.Cu",x:119.85,y:97,rot:0},
+{ref:"NT11",val:"SHNTC_P",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:119.85,y:98.5,rot:0},
+{ref:"NT12",val:"SHNTC_N",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:119.85,y:100,rot:0},
+{ref:"NT13",val:"NTC_MOT_H",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:115,y:121,rot:0},
+{ref:"NT14",val:"NTC_MOT_L",fp:"NetTie-2_SMD_Pad0.2mm",layer:"F.Cu",x:115,y:122.5,rot:0},
+{ref:"Q1",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"F.Cu",x:92.575,y:90.5,rot:-90},
+{ref:"Q2",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"B.Cu",x:92.5,y:89.5,rot:90},
+{ref:"Q3",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"F.Cu",x:106.075,y:90.6,rot:-90},
+{ref:"Q4",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"B.Cu",x:105.925,y:89.55,rot:90},
+{ref:"Q5",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"F.Cu",x:120,y:90.5,rot:-90},
+{ref:"Q6",val:"TPW1R306PL,L1Q",fp:"2-5S1A",layer:"B.Cu",x:119.725,y:88.95,rot:90},
+{ref:"Q7",val:"PMV90ENER",fp:"SOT-23-3",layer:"B.Cu",x:92.7,y:76.4,rot:0},
+{ref:"Q8",val:"PMV90ENER",fp:"SOT-23-3",layer:"B.Cu",x:120.7,y:76.4,rot:0},
+{ref:"R1",val:"22R 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:108.217157,y:111.646447,rot:135},
+{ref:"R2",val:"22R 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:107.5,y:112.5,rot:135},
+{ref:"R3",val:"22R 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:106.717157,y:113.217157,rot:135},
+{ref:"R4",val:"0R",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:89,y:118,rot:0},
+{ref:"R5",val:"100k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:91,y:112,rot:0},
+{ref:"R6",val:"9k09 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:91,y:113.5,rot:0},
+{ref:"R7",val:"10k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:89,y:119.5,rot:0},
+{ref:"R8",val:"2k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:109.5,y:110,rot:135},
+{ref:"R9",val:"2k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:110,y:109.5,rot:135},
+{ref:"R10",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:88,y:90,rot:180},
+{ref:"R11",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"B.Cu",x:88.6,y:95.5,rot:0},
+{ref:"R12",val:"0m5 1% 2W",fp:"HCS1206FTL500",layer:"B.Cu",x:93.5,y:95.65,rot:90},
+{ref:"R13",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:101.5,y:90.5,rot:0},
+{ref:"R14",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"B.Cu",x:102,y:94,rot:0},
+{ref:"R15",val:"0m5 1% 2W",fp:"HCS1206FTL500",layer:"B.Cu",x:107.85,y:95,rot:180},
+{ref:"R16",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"F.Cu",x:115.4,y:90.5,rot:0},
+{ref:"R17",val:"7R5 1% 1/2W",fp:"R_0805_2012_DensityHigh",layer:"B.Cu",x:115.5,y:94,rot:0},
+{ref:"R18",val:"0m5 1% 2W",fp:"HCS1206FTL500",layer:"B.Cu",x:122,y:95.35,rot:90},
+{ref:"R21",val:"100k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:96,rot:0},
+{ref:"R22",val:"100R 1% 1/5W",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:97.5,rot:0},
+{ref:"R23",val:"100R 1% 1/5W",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:99,rot:0},
+{ref:"R24",val:"100k 1%",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:100.5,rot:0},
+{ref:"R25",val:"100R 1% 1/5W",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:102,rot:0},
+{ref:"R26",val:"150R 1% 1/5W",fp:"R_0402_1005_DensityHigh",layer:"F.Cu",x:133.5,y:103.5,rot:0},
+{ref:"R27",val:"10k 1%",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:109,y:123,rot:0},
+{ref:"R28",val:"2k 1%",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:109,y:124.5,rot:0},
+{ref:"R29",val:"100k 1%",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:109,y:127.5,rot:0},
+{ref:"R30",val:"4k7 1%",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:109,y:129,rot:0},
+{ref:"R31",val:"0R",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:112,y:116,rot:0},
+{ref:"R33",val:"10k 1%",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:115,y:112.75,rot:0},
+{ref:"R50",val:"60R4 1% 1/4W",fp:"R_0603_1608_DensityHigh",layer:"F.Cu",x:122,y:108.75,rot:0},
+{ref:"R51",val:"60R4 1% 1/4W",fp:"R_0603_1608_DensityHigh",layer:"F.Cu",x:122.5,y:111,rot:0},
+{ref:"R52",val:"0R",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:85,y:101.5,rot:0},
+{ref:"R53",val:"0R",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:97,y:100.5,rot:0},
+{ref:"R54",val:"0R",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:123,y:102,rot:0},
+{ref:"R55",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:96.65,y:93.5,rot:0},
+{ref:"R56",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:110,y:93,rot:0},
+{ref:"R57",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"B.Cu",x:124.85,y:98,rot:180},
+{ref:"R58",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"F.Cu",x:96,y:95,rot:180},
+{ref:"R59",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"F.Cu",x:109.85,y:95.5,rot:180},
+{ref:"R60",val:"5R 1% 0.4W",fp:"R_0603_1608_DensityHigh",layer:"F.Cu",x:123.35,y:95,rot:180},
+{ref:"SW1",val:"CAS-220TA",fp:"CAS-220A_NDC-L",layer:"F.Cu",x:118,y:115.5,rot:0},
+{ref:"TH1",val:"47k 1% NTC",fp:"R_0402_1005_DensityHigh",layer:"B.Cu",x:109,y:121.5,rot:0},
+{ref:"U1",val:"STM32G474RET3",fp:"LQFP-64_10x10mm_P0.5mm",layer:"F.Cu",x:105.5,y:123,rot:-45},
+{ref:"U2",val:"LMR36506MSC5RPERQ1",fp:"LMR36503",layer:"B.Cu",x:88.4,y:114.5,rot:0},
+{ref:"U3",val:"LMR36006FSCQ",fp:"LMR36006",layer:"B.Cu",x:90.4,y:108.5,rot:0},
+{ref:"U4",val:"TPS62172DSG",fp:"WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm_ThermalVias",layer:"B.Cu",x:90.4,y:120.5,rot:0},
+{ref:"U5",val:"LP2992IM5-3.3/NOPB",fp:"SOT-23-5",layer:"B.Cu",x:91.4,y:125.5,rot:0},
+{ref:"U6",val:"DRV8353FS",fp:"WQFN-40-1EP_6x6mm_P0.5mm_EP4.15x4.15mm_ThermalVias",layer:"F.Cu",x:106,y:107.031264,rot:-45},
+{ref:"U7",val:"AS5047P",fp:"TSSOP-14_4.4x5mm_P0.65mm",layer:"B.Cu",x:106.664,y:100.373,rot:180},
+{ref:"U10",val:"TCAN1051HGVDRBRQ1",fp:"HVSON-8-1EP_3x3mm_P0.65mm_EP1.6x2.4mm_ThermalVias",layer:"F.Cu",x:117.5,y:109.5,rot:0}
 ];
 
-// DNP set
-const DNP_REFS = new Set(['U3','L2','FB3','NT2','R5','R6','C18','C19','C21','C23','C25','C26','C28','C30','C38']);
-
-// Footprint sizes [w, h] in mm
-const FP_SIZES = {
-  'LQFP-64_10x10mm_P0.5mm': [12, 12],
-  'WQFN-40-1EP_6x6mm_P0.5mm_EP4.15x4.15mm_ThermalVias': [7, 7],
-  'TSSOP-14_4.4x5mm_P0.65mm': [5, 4.4],
-  'HVSON-8-1EP_3x3mm_P0.65mm_EP1.6x2.4mm_ThermalVias': [3.5, 3.5],
-  'LMR36503': [3.5, 3.5],
-  'LMR36006': [3.5, 3.5],
-  'WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm_ThermalVias': [2.5, 2.5],
-  'SOT-23-5': [3, 1.8],
-  'SOT-23-3': [3, 1.8],
-  '2-5S1A': [4.6, 3],
-  'C_0402_1005_DensityHigh': [1, 0.5],
-  'C_0603_1608_DensityHigh': [1.6, 0.8],
-  'R_0805_2012_DensityHigh': [2, 1.25],
-  'C_0805_2012_DensityHighest': [2, 1.25],
-  'C_1206_3216_DensityHigh': [3.2, 1.6],
-  'C_1206_3216_DensityHighest': [3.2, 1.6],
-  'C_1210_3225_DensityHigh': [3.2, 2.5],
-  'R_0402_1005_DensityHigh': [1, 0.5],
-  'R_0603_1608_DensityHigh': [1.6, 0.8],
-  'HCS1206FTL500': [3.2, 1.6],
-  'L_Coilcraft_LPS4018': [4, 4],
-  'L_Coilcraft_LPS3314': [3.3, 3.3],
-  'D_SMB': [4.5, 3.6],
-  'D_SOD-523': [1.6, 0.8],
-  'SOT-323_SC-70': [2, 1.3],
-  'SOT1176D': [1.6, 1.6],
-  'LED_SM1206': [3.2, 1.6],
-  'MountingHole_3.2mm_M3_Pad_Via': [6, 6],
-  'AMASS_XT60PW-M_1x02_P7.20mm_Horizontal': [14, 9],
-  'Pad_Square_Vias_6.5x6.5mm': [6.5, 6.5],
-  'JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal': [7, 4.5],
-  'PTH_1x03_P2.54mm': [8, 2.54],
-  '1054301203': [8, 4],
-  'JST_GH_SM05B-GHS-TB_1x05-1MP_P1.25mm_Horizontal': [8, 4.5],
-  'CAS-220A_NDC-L': [3, 2.6],
-  'NetTie-2_SMD_Pad0.2mm': [0.6, 0.4],
-  'NetTie-2_SMD_Pad0.3mm': [0.6, 0.4],
-  'NetTie-2_SMD_Pad0.4mm': [0.8, 0.4],
+// Datasheet URLs
+const DATASHEETS = {
+  U1:"https://www.st.com/resource/en/datasheet/stm32g474re.pdf",
+  U2:"https://www.ti.com/lit/ds/symlink/lmr36506.pdf",
+  U4:"https://www.ti.com/lit/ds/symlink/tps62172.pdf",
+  U5:"https://www.ti.com/lit/ds/symlink/lp2992.pdf",
+  U6:"https://www.ti.com/lit/ds/symlink/drv8353r.pdf",
+  U7:"https://ams.com/documents/20143/36005/AS5047P_DS000324_3-00.pdf",
+  U10:"https://www.ti.com/lit/ds/symlink/tcan1051hg-q1.pdf",
+  Q1:"https://toshiba.semicon-storage.com/info/TPW1R306PL_datasheet_en_20220527.pdf"
 };
 
-// BOM data: [comment, designator, qty, footprint, lcsc]
-const BOM_DATA = [
-["STM32G474RET3","U1",1,"LQFP-64_10x10mm_P0.5mm","C523473"],
-["LMR36506MSC5RPERQ1","U2",1,"LMR36503","C2682610"],
-["TPS62172DSG","U4",1,"WSON-8","C131665"],
-["LP2992IM5-3.3/NOPB","U5",1,"SOT-23-5","C34065"],
-["DRV8353FS","U6",1,"WQFN-40","C2682003"],
-["AS5047P","U7",1,"TSSOP-14","C473028"],
-["TCAN1051HGVDRBRQ1","U10",1,"HVSON-8","C2837498"],
-["TPW1R306PL,L1Q","Q1,Q2,Q3,Q4,Q5,Q6",6,"2-5S1A","DIGIKEY_ONLY"],
-["PMV90ENER","Q7,Q8",2,"SOT-23-3","C913204"],
-["SMBJ51CD-M3/H","D1,D2",2,"D_SMB","C883042"],
-["BAT41KFILM","D3,D4,D5,D6,D7,D8,D9,D10,D11,D14,D15",11,"D_SOD-523","C108803"],
-["YELLOW","D12",1,"LED_1206","C2296"],
-["GREEN","D13",1,"LED_1206","C2297"],
-["PESD2CANFD24V-UX","D24,D25",2,"SC-70","C2827037"],
-["PESD4USB3U-TBSX","D26",1,"SOT1176D","VERIFY_LCSC"],
-["22u","L1",1,"LPS4018","DIGIKEY_ONLY"],
-["2u2","L3",1,"LPS3314","DIGIKEY_ONLY"],
-["1k @ 100MHz","FB1,FB2,FB4",3,"R_0805","C1015"],
-["22R 1%","R1,R2,R3",3,"R_0402","C25092"],
-["0R","R4,R31",2,"R_0402","C17168"],
-["10k 1%","R7,R27,R33",3,"R_0402","C25744"],
-["2k 1%","R8,R9,R28",3,"R_0402","C12135"],
-["7R5 1% 1/2W","R10,R11,R13,R14,R16,R17",6,"R_0805","C26025"],
-["0m5 1% 2W","R12,R15,R18",3,"HCS1206","DIGIKEY_ONLY"],
-["100k 1%","R21,R24,R29",3,"R_0402","C25741"],
-["100R 1%","R22,R23,R25",3,"R_0402","C25076"],
-["150R 1%","R26",1,"R_0402","C25082"],
-["4k7 1%","R30",1,"R_0402","C25900"],
-["60R4 1%","R50,R51",2,"R_0603","C23192"],
-["0R","R52,R53,R54",3,"R_0603","C21189"],
-["5R 1%","R55,R56,R57,R58,R59,R60",6,"R_0603","C23189"],
-["4u7 X7R 16V","C1,C84",2,"C_0603","C19666"],
-["1u X7R 10V","C2,C6,C9,C24",4,"C_0402","C52923"],
-["100n X7R 50V","C3,C4,C5,C8,C10,C11,C27,C29,C101,C102,C103,C104,C108,C109,C127,C128",16,"C_0402","C307331"],
-["4u7 X5R 25V","C7",1,"C_0402","C700651"],
-["1n X7R 25V","C12,C13,C14",3,"C_0402","C52717"],
-["2u2 X7R 100V","C15,C16,C17,C20,C45,C52",6,"R_0805","C3340953"],
-["100n X7R 100V","C22,C92",2,"C_0603","C2171154"],
-["4u7 X7R 100V","C31-C36,C39-C44,C46-C51,C53-C55,C57-C75,C77-C82,C85-C87",56,"C_1206","C2190283"],
-["22u X7R 10V","C37,C83",2,"C_0805","C45783"],
-["10u X7R 25V","C56",1,"C_0805","C95841"],
-["1u X7R 25V","C60,C88,C93",3,"C_0603","C15849"],
-["10n X7R 100V","C76",1,"C_0402","VERIFY_LCSC"],
-["100n X7R 16V","C90",1,"C_0402","C1525"],
-["47n X7R 100V","C91",1,"C_0603","VERIFY_LCSC"],
-["1u X7R 6.3V","C94",1,"C_0402","C52923"],
-["100n X7R 100V","C95,C97,C99",3,"C_1206","C2836855"],
-["4u7 X7R 100V","C89,C96,C98,C100",4,"C_1206","C2190283"],
-["4n7 X7R 100V","C129",1,"C_0402","VERIFY_LCSC"],
-["1n X7R 1kV","C130,C131,C132",3,"C_0603","VERIFY_LCSC"],
-["3n3 X7R 100V","C133,C134,C135,C136,C137,C138",6,"C_0402","VERIFY_LCSC"],
-["XT60PW-M","J2",1,"XT60PW","C2905422"],
-["Phase A","J3",1,"Pad_6.5mm",""],
-["Phase B","J4",1,"Pad_6.5mm",""],
-["Phase C","J5",1,"Pad_6.5mm",""],
-["S2B-PH-SM4-TB","J8",1,"JST_PH_2","C173752"],
-["PTH 01x03 2.54mm","J11",1,"PTH_3","C49257"],
-["Nano-Fit 1x03","J12,J13",2,"NanoFit_3","DIGIKEY_ONLY"],
-["SM05B-GHS-TB","J14",1,"JST_GH_5","C189898"],
-["CAS-220TA","SW1",1,"CAS220","DIGIKEY_ONLY"],
-["47k 1% NTC","TH1",1,"R_0402","C238446"],
-];
+// DNP refs
+const DNP_REFS = new Set(["U3","L2","FB3","NT2","R5","R6","C18","C19","C21","C23","C25","C26","C28","C30","C38"]);
+
+// Component descriptions
+const COMP_DESC = {
+  U1:"STM32G474RET3 - ARM Cortex-M4F microcontroller @ 170MHz. Runs 20kHz FOC loop with CORDIC co-processor for trig, 5x ADC, TIM1 advanced timer.",
+  U2:"LMR36506 - 65V-input 600mA synchronous buck converter. Steps 48V VBAT down to 5V for gate drivers and digital logic.",
+  U3:"LMR36006 - 60V-input 600mA buck (DNP). Optional 12V rail, not populated in v9.1.",
+  U4:"TPS62172 - 3.3V 500mA buck converter from 5V rail. Powers MCU digital domain with 2MHz switching.",
+  U5:"LP2992 - 250mA ultra-low-noise LDO. Generates clean A3.3V analog rail for ADC reference.",
+  U6:"DRV8353FS - Three-phase smart gate driver. SPI-configurable with internal dead-time generation. Drives 6x TPW1R306PL MOSFETs.",
+  U7:"AS5047P - 14-bit on-axis magnetic rotary encoder. SPI interface, up to 10MHz clock. Provides rotor angle for FOC.",
+  U10:"TCAN1051HG - CAN-FD transceiver with 5Mbps data rate. Bus fault protection to +/-58V.",
+  Q1:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. High-side Phase A switch.",
+  Q2:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. Low-side Phase A switch.",
+  Q3:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. High-side Phase B switch.",
+  Q4:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. Low-side Phase B switch.",
+  Q5:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. High-side Phase C switch.",
+  Q6:"TPW1R306PL - 100V 1.3mOhm N-channel power MOSFET. Low-side Phase C switch.",
+  Q7:"PMV90ENER - P-channel MOSFET for reverse polarity protection.",
+  Q8:"PMV90ENER - P-channel MOSFET for reverse polarity protection.",
+  R12:"HCS1206FTL500 - 0.5mOhm 2W current sense shunt. Phase A inline measurement.",
+  R15:"HCS1206FTL500 - 0.5mOhm 2W current sense shunt. Phase B inline measurement.",
+  R18:"HCS1206FTL500 - 0.5mOhm 2W current sense shunt. Phase C inline measurement.",
+  D1:"SMBJ51CD - 51V bidirectional TVS diode. Input transient protection.",
+  D2:"SMBJ51CD - 51V bidirectional TVS diode. Input transient protection.",
+  D12:"Yellow status LED.",
+  D13:"Green status LED.",
+  D24:"PESD2CANFD24V - CAN bus ESD protection diode.",
+  D25:"PESD2CANFD24V - CAN bus ESD protection diode.",
+  D26:"PESD4USB3U - USB ESD protection.",
+  J2:"XT60PW-M - Horizontal XT60 power connector. 48V battery input, rated 30A continuous.",
+  J3:"Phase A motor output pad. 6.5mm square with thermal vias.",
+  J4:"Phase B motor output pad. 6.5mm square with thermal vias.",
+  J5:"Phase C motor output pad. 6.5mm square with thermal vias.",
+  J8:"JST PH 2-pin connector. Motor thermistor input.",
+  J11:"2.54mm pin header 1x03. SWD debug connector.",
+  J12:"Molex Nano-Fit 1x03. CAN bus connector.",
+  J13:"Molex Nano-Fit 1x03. CAN bus connector.",
+  J14:"JST GH 5-pin connector. Auxiliary I/O.",
+  L1:"22uH inductor - LPS4018 for 5V buck (U2).",
+  L2:"22uH inductor - LPS4018 for 12V buck (DNP).",
+  L3:"2.2uH inductor - LPS3314 for 3.3V buck (U4).",
+  SW1:"CAS-220TA - DIP switch for node ID / configuration.",
+  TH1:"47k NTC thermistor - Board temperature sensing.",
+  FB1:"Ferrite bead 1k@100MHz - Analog power filtering.",
+  FB2:"Ferrite bead 1k@100MHz - 5V power filtering.",
+  FB3:"Ferrite bead 1k@100MHz - 12V filtering (DNP).",
+  FB4:"Ferrite bead 1k@100MHz - 3.3V power filtering."
+};
 
 // =================================================================
-// TAB ROUTING
+// TAB SWITCHING
 // =================================================================
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabPanels = document.querySelectorAll('.tab-panel');
-
-function activateTab(name) {
-  tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  tabPanels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
-  window.location.hash = name;
-  if (name === 'viewer') resizeCanvas();
-}
-
-tabBtns.forEach(b => b.addEventListener('click', () => activateTab(b.dataset.tab)));
-
-// Hash routing
-const hash = window.location.hash.replace('#', '');
-if (['viewer','bom','architecture','research'].includes(hash)) {
-  activateTab(hash);
-}
-
-// =================================================================
-// BOARD VIEWER (Canvas)
-// =================================================================
-const canvas = document.getElementById('pcb-canvas');
-const ctx = canvas.getContext('2d');
-const coordsEl = document.getElementById('coords');
-const inspectorEl = document.getElementById('inspector');
-
-// Board geometry
-const BOARD_CX = 105.664;
-const BOARD_CY = 100.373;
-const BOARD_R = 32.838;
-const SCALE = 8; // px per mm
-
-// View state
-let viewX = 0, viewY = 0, viewZoom = 1;
-let isDragging = false, dragStartX = 0, dragStartY = 0, dragViewX = 0, dragViewY = 0;
-let selectedComp = null;
-let showFCu = true, showBCu = true;
-
-function getCompSize(fp) {
-  return FP_SIZES[fp] || [2, 1];
-}
-
-function getCompColor(ref) {
-  if (ref.startsWith('U')) return { fill: 'rgba(6,182,212,0.35)', stroke: '#06b6d4' };
-  if (ref.startsWith('Q')) return { fill: 'rgba(245,158,11,0.3)', stroke: '#f59e0b' };
-  if (ref.startsWith('C')) return { fill: 'rgba(100,116,139,0.2)', stroke: '#64748b' };
-  if (ref.startsWith('R') || ref.startsWith('FB') || ref.startsWith('TH')) return { fill: 'rgba(100,116,139,0.18)', stroke: '#64748b' };
-  if (ref.startsWith('D')) return { fill: 'rgba(148,163,184,0.2)', stroke: '#94a3b8' };
-  if (ref.startsWith('J')) return { fill: 'rgba(34,197,94,0.25)', stroke: '#22c55e' };
-  if (ref.startsWith('L')) return { fill: 'rgba(168,85,247,0.25)', stroke: '#a855f7' };
-  if (ref.startsWith('H')) return { fill: 'rgba(100,116,139,0.15)', stroke: '#475569' };
-  if (ref.startsWith('SW')) return { fill: 'rgba(6,182,212,0.2)', stroke: '#06b6d4' };
-  if (ref.startsWith('NT')) return { fill: 'rgba(100,116,139,0.1)', stroke: '#475569' };
-  return { fill: 'rgba(100,116,139,0.15)', stroke: '#64748b' };
-}
-
-function isIC(ref) {
-  return ref.startsWith('U');
-}
-
-function isDNP(ref) {
-  return DNP_REFS.has(ref);
-}
-
-function resizeCanvas() {
-  const wrap = canvas.parentElement;
-  canvas.width = wrap.clientWidth * window.devicePixelRatio;
-  canvas.height = wrap.clientHeight * window.devicePixelRatio;
-  canvas.style.width = wrap.clientWidth + 'px';
-  canvas.style.height = wrap.clientHeight + 'px';
-  ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-  drawBoard();
-}
-
-function resetView() {
-  const wrap = canvas.parentElement;
-  const cw = wrap.clientWidth;
-  const ch = wrap.clientHeight;
-  viewZoom = Math.min(cw / ((BOARD_R * 2 + 10) * SCALE), ch / ((BOARD_R * 2 + 10) * SCALE));
-  viewX = cw / 2 - BOARD_CX * SCALE * viewZoom;
-  viewY = ch / 2 - BOARD_CY * SCALE * viewZoom;
-  drawBoard();
-}
-
-function mmToCanvas(x, y) {
-  return [x * SCALE * viewZoom + viewX, y * SCALE * viewZoom + viewY];
-}
-
-function canvasToMm(cx, cy) {
-  return [(cx - viewX) / (SCALE * viewZoom), (cy - viewY) / (SCALE * viewZoom)];
-}
-
-function drawBoard() {
-  const w = canvas.width / window.devicePixelRatio;
-  const h = canvas.height / window.devicePixelRatio;
-
-  ctx.clearRect(0, 0, w, h);
-
-  // Background
-  ctx.fillStyle = '#0a0e14';
-  ctx.fillRect(0, 0, w, h);
-
-  // Board circle (FR4)
-  const [bcx, bcy] = mmToCanvas(BOARD_CX, BOARD_CY);
-  const br = BOARD_R * SCALE * viewZoom;
-  ctx.beginPath();
-  ctx.arc(bcx, bcy, br, 0, Math.PI * 2);
-  ctx.fillStyle = '#0a1a0a';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(6,182,212,0.15)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Board outline silkscreen
-  ctx.beginPath();
-  ctx.arc(bcx, bcy, br - 1, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-
-  // Draw components
-  const sz = SCALE * viewZoom;
-
-  // Sort: draw B.Cu first, then F.Cu on top
-  const sorted = [...COMPONENTS].sort((a, b) => {
-    if (a[3] === 'B.Cu' && b[3] === 'F.Cu') return -1;
-    if (a[3] === 'F.Cu' && b[3] === 'B.Cu') return 1;
-    return 0;
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'viewer') requestAnimationFrame(() => boardViewer.fitView());
   });
+});
 
-  for (const comp of sorted) {
-    const [ref, val, fp, layer, x, y, rot, func] = comp;
-    if (layer === 'F.Cu' && !showFCu) continue;
-    if (layer === 'B.Cu' && !showBCu) continue;
+// =================================================================
+// BOARD VIEWER
+// =================================================================
+const boardViewer = (() => {
+  const canvas = document.getElementById('board-canvas');
+  const ctx = canvas.getContext('2d');
+  const tooltip = document.getElementById('board-tooltip');
 
-    const [cw, ch] = getCompSize(fp);
-    const pw = cw * sz;
-    const ph = ch * sz;
-    const [px, py] = mmToCanvas(x, y);
-    const colors = getCompColor(ref);
-    const dnp = isDNP(ref);
-    const selected = selectedComp && selectedComp[0] === ref;
+  const BOARD_DIAMETER = 65.7;
+  const BOARD_RADIUS = BOARD_DIAMETER / 2;
+  const BOARD_CX = 106;
+  const BOARD_CY = 100;
+
+  let zoom = 1, panX = 0, panY = 0;
+  let isDragging = false, dragStartX = 0, dragStartY = 0, dragPanX = 0, dragPanY = 0;
+  let selectedComp = null, hoveredComp = null;
+  let animFrame = 0;
+  let selectionAnimId = null;
+
+  let showFCu = true, showBCu = true, showSilk = true;
+  let showGND = false, showVBAT = false, show5V = false, show3V3 = false;
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+  }
+
+  function fitView() {
+    resize();
+    const cw = canvas.width, ch = canvas.height;
+    const scale = Math.min(cw, ch) / (BOARD_DIAMETER + 10);
+    zoom = scale / window.devicePixelRatio;
+    panX = cw / 2 / window.devicePixelRatio - BOARD_CX * zoom;
+    panY = ch / 2 / window.devicePixelRatio - BOARD_CY * zoom;
+    draw();
+  }
+
+  function mmToScreen(mx, my) {
+    return [mx * zoom + panX, my * zoom + panY];
+  }
+
+  function screenToMM(sx, sy) {
+    return [(sx - panX) / zoom, (sy - panY) / zoom];
+  }
+
+  function getCompSize(c) {
+    const fp = c.fp;
+    if (fp.includes('LQFP-64')) return { w: 10, h: 10, type: 'ic' };
+    if (fp.includes('WQFN-40')) return { w: 6, h: 6, type: 'ic' };
+    if (fp.includes('TSSOP-14')) return { w: 5, h: 4.4, type: 'ic' };
+    if (fp.includes('HVSON-8') || fp.includes('WSON-8')) return { w: 3, h: 3, type: 'ic' };
+    if (fp.includes('LMR3650')) return { w: 3.5, h: 3, type: 'ic' };
+    if (fp.includes('LMR3600')) return { w: 2.5, h: 2.5, type: 'ic' };
+    if (fp.includes('SOT-23-5') || fp.includes('SOT-23-3')) return { w: 2.9, h: 1.6, type: 'ic' };
+    if (fp.includes('SOT-323') || fp.includes('SOT1176')) return { w: 2, h: 1.3, type: 'ic' };
+    if (fp.includes('2-5S1A')) return { w: 4.6, h: 3.6, type: 'mosfet' };
+    if (fp.includes('0402')) return { w: 1.0, h: 0.5, type: 'passive' };
+    if (fp.includes('0603')) return { w: 1.6, h: 0.8, type: 'passive' };
+    if (fp.includes('0805')) return { w: 2.0, h: 1.25, type: 'passive' };
+    if (fp.includes('1206') || fp.includes('HCS1206')) return { w: 3.2, h: 1.6, type: 'passive' };
+    if (fp.includes('1210')) return { w: 3.2, h: 2.5, type: 'passive' };
+    if (fp.includes('D_SMB')) return { w: 4.5, h: 3.5, type: 'passive' };
+    if (fp.includes('D_SOD-523')) return { w: 1.2, h: 0.8, type: 'passive' };
+    if (fp.includes('LED_SM1206')) return { w: 3.2, h: 1.6, type: 'led' };
+    if (fp.includes('MountingHole')) return { w: 3.2, h: 3.2, type: 'hole' };
+    if (fp.includes('XT60')) return { w: 10, h: 8, type: 'connector' };
+    if (fp.includes('Pad_Square')) return { w: 6.5, h: 6.5, type: 'connector' };
+    if (fp.includes('JST_PH')) return { w: 6, h: 4.5, type: 'connector' };
+    if (fp.includes('PTH_1x03')) return { w: 7.6, h: 2.5, type: 'connector' };
+    if (fp.includes('1054301203')) return { w: 9, h: 4, type: 'connector' };
+    if (fp.includes('JST_GH')) return { w: 7.5, h: 4, type: 'connector' };
+    if (fp.includes('CAS-220')) return { w: 5, h: 3, type: 'connector' };
+    if (fp.includes('NetTie')) return { w: 0.6, h: 0.3, type: 'passive' };
+    if (fp.includes('Coilcraft_LPS4018')) return { w: 4, h: 4, type: 'inductor' };
+    if (fp.includes('Coilcraft_LPS3314')) return { w: 3.3, h: 3.3, type: 'inductor' };
+    return { w: 1.5, h: 1, type: 'passive' };
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    if (r < 0) r = 0;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    const cw = canvas.width / dpr, ch = canvas.height / dpr;
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Background
+    ctx.fillStyle = '#0a0e14';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Board substrate
+    const [bcx, bcy] = mmToScreen(BOARD_CX, BOARD_CY);
+    const br = BOARD_RADIUS * zoom;
 
     ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate((rot * Math.PI) / 180);
-
-    // Layer tint
-    let fillColor = colors.fill;
-    let strokeColor = colors.stroke;
-    if (layer === 'F.Cu') {
-      fillColor = fillColor.replace(/[\d.]+\)$/, m => (parseFloat(m) * 1.1).toFixed(2) + ')');
-    } else {
-      fillColor = fillColor.replace(/[\d.]+\)$/, m => (parseFloat(m) * 0.8).toFixed(2) + ')');
-    }
-
-    if (dnp) {
-      ctx.globalAlpha = 0.3;
-    }
-
-    // Body
-    ctx.fillStyle = fillColor;
-    ctx.strokeStyle = selected ? '#06b6d4' : strokeColor;
-    ctx.lineWidth = selected ? 2 : 0.8;
-    if (dnp) {
-      ctx.setLineDash([3, 2]);
-    }
     ctx.beginPath();
-    ctx.rect(-pw / 2, -ph / 2, pw, ph);
+    ctx.arc(bcx, bcy, br, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a1a0a';
     ctx.fill();
-    ctx.stroke();
-    ctx.setLineDash([]);
 
-    // Pin 1 dot for ICs
-    if (isIC(ref) && pw > 15) {
-      ctx.beginPath();
-      ctx.arc(-pw / 2 + 3, -ph / 2 + 3, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.fill();
-    }
-
-    // Layer indicator strip
-    const layerColor = layer === 'F.Cu' ? 'rgba(239,68,68,0.3)' : 'rgba(59,130,246,0.3)';
-    ctx.fillStyle = layerColor;
-    ctx.fillRect(-pw / 2, -ph / 2, pw, Math.max(1, ph * 0.06));
-
-    // Reference text for larger components
-    if (pw > 12 || isIC(ref)) {
-      const fontSize = Math.max(6, Math.min(10, pw * 0.22));
-      ctx.font = `500 ${fontSize}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(ref, 0, 0);
-    }
-
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
-
-  // Selected component highlight ring
-  if (selectedComp) {
-    const [ref, val, fp, layer, x, y, rot] = selectedComp;
-    const [cw, ch] = getCompSize(fp);
-    const pw = cw * sz;
-    const ph = ch * sz;
-    const [px, py] = mmToCanvas(x, y);
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate((rot * Math.PI) / 180);
-    ctx.strokeStyle = '#22d3ee';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = '#06b6d4';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.rect(-pw / 2 - 2, -ph / 2 - 2, pw + 4, ph + 4);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  }
-
-  // Center crosshair
-  ctx.strokeStyle = 'rgba(6,182,212,0.1)';
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(bcx - 6, bcy);
-  ctx.lineTo(bcx + 6, bcy);
-  ctx.moveTo(bcx, bcy - 6);
-  ctx.lineTo(bcx, bcy + 6);
-  ctx.stroke();
-}
-
-function hitTest(cx, cy) {
-  const [mx, my] = canvasToMm(cx, cy);
-  const sz = SCALE * viewZoom;
-  let best = null;
-  let bestArea = Infinity;
-
-  for (const comp of COMPONENTS) {
-    const [ref, val, fp, layer, x, y, rot] = comp;
-    if (layer === 'F.Cu' && !showFCu) continue;
-    if (layer === 'B.Cu' && !showBCu) continue;
-
-    const [cw, ch] = getCompSize(fp);
-    // Simple AABB hit test (ignoring rotation for simplicity on small components)
-    const hw = cw / 2 + 0.3;
-    const hh = ch / 2 + 0.3;
-    if (mx >= x - hw && mx <= x + hw && my >= y - hh && my <= y + hh) {
-      const area = cw * ch;
-      // Prefer smaller / F.Cu components (on top)
-      if (area < bestArea || (area === bestArea && layer === 'F.Cu')) {
-        best = comp;
-        bestArea = area;
+    // Noise texture at moderate zoom
+    if (zoom > 2 && zoom < 15) {
+      const step = Math.max(2, Math.floor(6 / zoom * 4));
+      for (let x = bcx - br; x < bcx + br; x += step) {
+        for (let y = bcy - br; y < bcy + br; y += step) {
+          const dx = x - bcx, dy = y - bcy;
+          if (dx * dx + dy * dy < br * br) {
+            ctx.fillStyle = 'rgba(20,40,20,' + (Math.random() * 0.25).toFixed(2) + ')';
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
       }
     }
+
+    // Board edge ring
+    ctx.beginPath();
+    ctx.arc(bcx, bcy, br - 0.5, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(138,106,42,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Zone overlays
+    if (showGND) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(bcx, bcy, br - 1, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(34,197,94,0.06)';
+      ctx.fill();
+      ctx.restore();
+    }
+    if (showVBAT) {
+      const [x1, y1] = mmToScreen(75, 73);
+      const [x2, y2] = mmToScreen(135, 100);
+      ctx.fillStyle = 'rgba(239,68,68,0.10)';
+      ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    }
+    if (show5V) {
+      const [x1, y1] = mmToScreen(84, 112);
+      const [x2, y2] = mmToScreen(100, 128);
+      ctx.fillStyle = 'rgba(245,158,11,0.10)';
+      ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    }
+    if (show3V3) {
+      const [x1, y1] = mmToScreen(93, 115);
+      const [x2, y2] = mmToScreen(125, 135);
+      ctx.fillStyle = 'rgba(59,130,246,0.10)';
+      ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    }
+
+    // Clip to board circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bcx, bcy, br, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Render components
+    COMPONENTS.forEach(c => {
+      if (c.layer === 'F.Cu' && !showFCu) return;
+      if (c.layer === 'B.Cu' && !showBCu) return;
+
+      const size = getCompSize(c);
+      const [sx, sy] = mmToScreen(c.x, c.y);
+      const sw = size.w * zoom;
+      const sh = size.h * zoom;
+      const rot = c.rot * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(rot);
+
+      // Shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 3 * Math.min(zoom / 3, 2);
+      ctx.shadowOffsetY = 1;
+
+      const isHovered = hoveredComp === c;
+      const isSelected = selectedComp === c;
+
+      if (size.type === 'ic') {
+        const grad = ctx.createLinearGradient(0, -sh / 2, 0, sh / 2);
+        grad.addColorStop(0, isHovered ? '#2a2a3e' : '#1a1a2a');
+        grad.addColorStop(1, isHovered ? '#1e1e30' : '#141420');
+        ctx.fillStyle = grad;
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 1.5 * Math.min(zoom / 3, 1));
+        ctx.fill();
+        ctx.fillStyle = '#c9a84c';
+        ctx.beginPath();
+        ctx.arc(-sw / 2 + 1.5 * Math.min(zoom / 3, 1), -sh / 2 + 1.5 * Math.min(zoom / 3, 1), 0.8 * Math.min(zoom / 3, 1.5), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        if (zoom > 4) {
+          ctx.fillStyle = '#c9a84c';
+          const padCount = c.fp.includes('LQFP-64') ? 16 : c.fp.includes('WQFN-40') ? 10 : 7;
+          for (let side = 0; side < 4; side++) {
+            for (let i = 0; i < padCount; i++) {
+              ctx.save();
+              ctx.rotate(side * Math.PI / 2);
+              const px = -sw / 2 + sw / (padCount + 1) * (i + 1);
+              const pw = Math.max(0.4 * zoom / 5, 0.3);
+              ctx.fillRect(px - pw / 2, -sh / 2 - pw, pw, pw * 2);
+              ctx.restore();
+            }
+          }
+        }
+      } else if (size.type === 'mosfet') {
+        ctx.fillStyle = isHovered ? '#2a2a30' : '#1a1a24';
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 1);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.fillStyle = '#c9a84c';
+        ctx.fillRect(-sw / 2 + sw * 0.08, -sh / 4, sw * 0.55, sh / 2);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(sw / 2 - sw * 0.15, -sh / 2 + sh / 5 * (i + 0.5), sw * 0.15, sh / 6);
+        }
+      } else if (size.type === 'led') {
+        const color = c.ref === 'D12' ? '#e6b800' : '#22c55e';
+        ctx.fillStyle = isHovered ? color : color + 'cc';
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 0.5);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.fillStyle = '#aaa';
+        ctx.fillRect(-sw / 2 - 0.3, -sh / 4, 0.5, sh / 2);
+        ctx.fillRect(sw / 2 - 0.2, -sh / 4, 0.5, sh / 2);
+      } else if (size.type === 'hole') {
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.beginPath();
+        ctx.arc(0, 0, sw / 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#c9a84c';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, sw / 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a1a0a';
+        ctx.fill();
+      } else if (size.type === 'connector') {
+        ctx.fillStyle = isHovered ? '#2a2a36' : '#1e1e28';
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 1.5);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 0.5;
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 1.5);
+        ctx.stroke();
+        if (zoom > 4) {
+          const pins = c.fp.includes('1x03') ? 3 : c.fp.includes('1x05') ? 5 : c.fp.includes('1x02') ? 2 : 1;
+          ctx.fillStyle = '#111';
+          for (let i = 0; i < pins; i++) {
+            const px = -sw / 2 + sw / (pins + 1) * (i + 1);
+            ctx.beginPath();
+            ctx.arc(px, 0, Math.max(0.4, 0.6 * zoom / 5), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      } else if (size.type === 'inductor') {
+        ctx.fillStyle = isHovered ? '#2a2a2a' : '#1c1c1c';
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 1);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 0.3;
+        ctx.beginPath();
+        ctx.arc(0, 0, sw / 3, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // Passive
+        ctx.fillStyle = isHovered ? '#36363e' : '#2a2a30';
+        roundRect(ctx, -sw / 2, -sh / 2, sw, sh, 0.3 * Math.min(zoom / 3, 2));
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.fillStyle = '#b8a040';
+        const capW = Math.max(sw * 0.15, 0.3);
+        ctx.fillRect(-sw / 2, -sh / 2, capW, sh);
+        ctx.fillRect(sw / 2 - capW, -sh / 2, capW, sh);
+      }
+
+      // Selection ring
+      if (isSelected) {
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        const dashOffset = (animFrame / 2) % 20;
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.lineDashOffset = dashOffset;
+        const pad = 1.5;
+        roundRect(ctx, -sw / 2 - pad, -sh / 2 - pad, sw + pad * 2, sh + pad * 2, 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.restore();
+    });
+
+    // Silkscreen refs
+    if (showSilk && zoom > 3) {
+      const fontSize = Math.max(0.6 * zoom, 5);
+      ctx.font = fontSize + 'px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      COMPONENTS.forEach(c => {
+        if (c.layer === 'F.Cu' && !showFCu) return;
+        if (c.layer === 'B.Cu' && !showBCu) return;
+        const size = getCompSize(c);
+        if (size.type === 'passive' && size.w < 1.2 && zoom < 8) return;
+        const [sx, sy] = mmToScreen(c.x, c.y);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillText(c.ref, sx, sy - size.h * zoom / 2 - fontSize * 0.6);
+      });
+    }
+
+    // Pads at high zoom
+    if (zoom > 8) {
+      COMPONENTS.forEach(c => {
+        if (c.layer === 'F.Cu' && !showFCu) return;
+        if (c.layer === 'B.Cu' && !showBCu) return;
+        const size = getCompSize(c);
+        if (size.type !== 'passive') return;
+        const [sx, sy] = mmToScreen(c.x, c.y);
+        const rot = c.rot * Math.PI / 180;
+        const sw = size.w * zoom;
+        const sh = size.h * zoom;
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(rot);
+        ctx.fillStyle = '#c9a84c';
+        ctx.strokeStyle = '#8a6a2a';
+        ctx.lineWidth = 0.5;
+        const padW = sw * 0.18;
+        const padH = sh * 0.8;
+        ctx.fillRect(-sw / 2 - padW * 0.2, -padH / 2, padW, padH);
+        ctx.strokeRect(-sw / 2 - padW * 0.2, -padH / 2, padW, padH);
+        ctx.fillRect(sw / 2 - padW * 0.8, -padH / 2, padW, padH);
+        ctx.strokeRect(sw / 2 - padW * 0.8, -padH / 2, padW, padH);
+        ctx.restore();
+      });
+    }
+
+    ctx.restore(); // clip
+    ctx.restore(); // scale
+
+    document.getElementById('zoom-display').textContent = 'Zoom: ' + zoom.toFixed(1) + 'x';
   }
-  return best;
-}
 
-function showInspector(comp) {
-  if (!comp) {
-    inspectorEl.classList.remove('open');
-    selectedComp = null;
-    drawBoard();
-    return;
-  }
-  selectedComp = comp;
-  const [ref, val, fp, layer, x, y, rot, func] = comp;
-  document.getElementById('insp-ref').textContent = ref;
-  document.getElementById('insp-value').textContent = val;
-  document.getElementById('insp-fp').textContent = fp;
-  document.getElementById('insp-pos').textContent = `X: ${x.toFixed(3)} mm   Y: ${y.toFixed(3)} mm`;
-  document.getElementById('insp-rot').textContent = rot + '\u00b0';
-  document.getElementById('insp-layer-text').textContent = layer;
-  const dot = document.getElementById('insp-layer-dot');
-  dot.style.background = layer === 'F.Cu' ? '#ef4444' : '#3b82f6';
-  document.getElementById('insp-func').textContent = func + (isDNP(ref) ? ' [DNP]' : '');
-  inspectorEl.classList.add('open');
-  drawBoard();
-}
-
-// Canvas events
-canvas.addEventListener('mousedown', e => {
-  isDragging = true;
-  dragStartX = e.offsetX;
-  dragStartY = e.offsetY;
-  dragViewX = viewX;
-  dragViewY = viewY;
-});
-
-canvas.addEventListener('mousemove', e => {
-  const [mx, my] = canvasToMm(e.offsetX, e.offsetY);
-  coordsEl.textContent = `X: ${mx.toFixed(2)} mm   Y: ${my.toFixed(2)} mm`;
-
-  if (isDragging) {
-    viewX = dragViewX + (e.offsetX - dragStartX);
-    viewY = dragViewY + (e.offsetY - dragStartY);
-    drawBoard();
-  }
-});
-
-canvas.addEventListener('mouseup', e => {
-  const dx = Math.abs(e.offsetX - dragStartX);
-  const dy = Math.abs(e.offsetY - dragStartY);
-  if (dx < 3 && dy < 3) {
-    const comp = hitTest(e.offsetX, e.offsetY);
-    showInspector(comp);
-  }
-  isDragging = false;
-});
-
-canvas.addEventListener('mouseleave', () => { isDragging = false; });
-
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-  const newZoom = Math.max(0.5, Math.min(10, viewZoom * zoomFactor));
-  const mx = e.offsetX;
-  const my = e.offsetY;
-  viewX = mx - (mx - viewX) * (newZoom / viewZoom);
-  viewY = my - (my - viewY) * (newZoom / viewZoom);
-  viewZoom = newZoom;
-  drawBoard();
-}, { passive: false });
-
-document.getElementById('layer-fcu').addEventListener('change', e => { showFCu = e.target.checked; drawBoard(); });
-document.getElementById('layer-bcu').addEventListener('change', e => { showBCu = e.target.checked; drawBoard(); });
-document.getElementById('reset-view').addEventListener('click', resetView);
-document.getElementById('insp-close').addEventListener('click', () => showInspector(null));
-
-window.addEventListener('resize', resizeCanvas);
-requestAnimationFrame(() => { resizeCanvas(); resetView(); });
-
-// =================================================================
-// BOM TABLE
-// =================================================================
-let bomSortCol = 0;
-let bomSortAsc = true;
-
-function classifyBomRow(comment, designator) {
-  if (/^(STM32|LMR|TPS|LP2992|DRV|AS5047|TCAN|PMV)/i.test(comment)) return 'bom-row-ic';
-  if (/^(XT60|Phase|S2B|PTH|Nano|SM05|CAS)/i.test(comment)) return 'bom-row-connector';
-  if (/^(TPW1R|SMBJ|BAT41|YELLOW|GREEN|PESD)/i.test(comment)) return 'bom-row-power';
-  return '';
-}
-
-function isDnpBomRow(designator) {
-  const refs = designator.split(',').map(s => s.trim());
-  return refs.every(r => DNP_REFS.has(r));
-}
-
-function renderBom(filter, sortCol, asc) {
-  const body = document.getElementById('bom-body');
-  let rows = [...BOM_DATA];
-
-  if (filter) {
-    const f = filter.toLowerCase();
-    rows = rows.filter(r => r.some(cell => String(cell).toLowerCase().includes(f)));
+  function hitTest(mx, my) {
+    const [mmx, mmy] = screenToMM(mx, my);
+    let best = null, bestDist = Infinity;
+    COMPONENTS.forEach(c => {
+      if (c.layer === 'F.Cu' && !showFCu) return;
+      if (c.layer === 'B.Cu' && !showBCu) return;
+      const size = getCompSize(c);
+      const rot = -c.rot * Math.PI / 180;
+      const dx = mmx - c.x, dy = mmy - c.y;
+      const rx = dx * Math.cos(rot) - dy * Math.sin(rot);
+      const ry = dx * Math.sin(rot) + dy * Math.cos(rot);
+      if (Math.abs(rx) < size.w / 2 + 0.5 && Math.abs(ry) < size.h / 2 + 0.5) {
+        const d = rx * rx + ry * ry;
+        if (d < bestDist) { bestDist = d; best = c; }
+      }
+    });
+    return best;
   }
 
-  rows.sort((a, b) => {
-    let va = a[sortCol], vb = b[sortCol];
-    if (sortCol === 2) { va = +va; vb = +vb; }
-    else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
-    if (va < vb) return asc ? -1 : 1;
-    if (va > vb) return asc ? 1 : -1;
-    return 0;
+  function showInspector(c) {
+    if (!c) {
+      document.getElementById('inspector-empty').style.display = '';
+      document.getElementById('inspector-content').style.display = 'none';
+      return;
+    }
+    document.getElementById('inspector-empty').style.display = 'none';
+    const ic = document.getElementById('inspector-content');
+    ic.style.display = '';
+    const layerClass = c.layer === 'F.Cu' ? 'fcu' : 'bcu';
+    const desc = COMP_DESC[c.ref] || '';
+    const ds = DATASHEETS[c.ref];
+    const dsQ = c.ref.match(/^Q[1-6]$/) ? DATASHEETS['Q1'] : null;
+    const dsLink = ds || dsQ;
+    const size = getCompSize(c);
+
+    let padInfo = '';
+    if (size.type === 'ic') {
+      const pinMatch = c.fp.match(/(\d+)/);
+      if (pinMatch) padInfo = '<div class="inspector-pads">Pins: ' + pinMatch[1] + '</div>';
+    }
+
+    ic.innerHTML =
+      '<div class="inspector-ref ' + layerClass + '">' + c.ref + '</div>' +
+      '<div class="inspector-value">' + c.val + '</div>' +
+      '<div class="inspector-row"><span class="lbl">Footprint</span><span class="val">' + c.fp.split('_').slice(0, 2).join('_') + '</span></div>' +
+      '<div class="inspector-row"><span class="lbl">Position</span><span class="val">(' + c.x.toFixed(2) + ', ' + c.y.toFixed(2) + ') mm</span></div>' +
+      '<div class="inspector-row"><span class="lbl">Rotation</span><span class="val">' + c.rot + '&deg;</span></div>' +
+      '<div class="inspector-row"><span class="lbl">Layer</span><span class="val" style="color:' + (c.layer === 'F.Cu' ? 'var(--red)' : '#4488ff') + '">' + c.layer + '</span></div>' +
+      (desc ? '<div class="inspector-desc">' + desc + '</div>' : '') +
+      (dsLink ? '<a href="' + dsLink + '" target="_blank" class="inspector-btn">Datasheet &rarr;</a>' : '') +
+      padInfo;
+  }
+
+  // Events
+  canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.offsetX;
+    dragStartY = e.offsetY;
+    dragPanX = panX;
+    dragPanY = panY;
   });
 
-  let totalQty = 0;
-  let html = '';
-  for (const r of rows) {
-    const [comment, desig, qty, fp, lcsc] = r;
-    const rowClass = classifyBomRow(comment, desig);
-    const dnpClass = isDnpBomRow(desig) ? ' bom-row-dnp' : '';
-    totalQty += qty;
+  canvas.addEventListener('mousemove', e => {
+    if (isDragging) {
+      panX = dragPanX + (e.offsetX - dragStartX);
+      panY = dragPanY + (e.offsetY - dragStartY);
+      draw();
+      return;
+    }
+    const c = hitTest(e.offsetX, e.offsetY);
+    hoveredComp = c;
+    canvas.style.cursor = c ? 'pointer' : 'grab';
+    if (c) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+      tooltip.querySelector('.tt-ref').textContent = c.ref;
+      tooltip.querySelector('.tt-val').textContent = c.val;
+    } else {
+      tooltip.style.display = 'none';
+    }
+    draw();
+  });
 
-    let lcscHtml;
-    if (lcsc === 'DIGIKEY_ONLY') lcscHtml = '<span class="lcsc-digikey">DIGIKEY_ONLY</span>';
-    else if (lcsc === 'VERIFY_LCSC') lcscHtml = '<span class="lcsc-verify">VERIFY_LCSC</span>';
-    else if (!lcsc) lcscHtml = '<span class="lcsc-none">--</span>';
-    else lcscHtml = `<span class="lcsc-valid">${lcsc}</span>`;
+  canvas.addEventListener('mouseup', e => {
+    const moved = Math.abs(e.offsetX - dragStartX) > 3 || Math.abs(e.offsetY - dragStartY) > 3;
+    if (!moved) {
+      const c = hitTest(e.offsetX, e.offsetY);
+      selectedComp = c;
+      showInspector(c);
+      if (c && !selectionAnimId) {
+        let frame = 0;
+        const animate = () => {
+          frame++;
+          animFrame = frame;
+          draw();
+          if (frame < 120 && selectedComp === c) {
+            selectionAnimId = requestAnimationFrame(animate);
+          } else {
+            selectionAnimId = null;
+          }
+        };
+        selectionAnimId = requestAnimationFrame(animate);
+      } else {
+        draw();
+      }
+    }
+    isDragging = false;
+  });
 
-    html += `<tr class="${rowClass}${dnpClass}">
-      <td>${comment}</td>
-      <td style="font-family:var(--font-mono);font-size:0.75rem;">${desig}</td>
-      <td style="text-align:center;">${qty}</td>
-      <td style="font-family:var(--font-mono);font-size:0.72rem;">${fp}</td>
-      <td style="font-family:var(--font-mono);font-size:0.72rem;">${lcscHtml}</td>
-    </tr>`;
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+    hoveredComp = null;
+    tooltip.style.display = 'none';
+    draw();
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    const mx = e.offsetX, my = e.offsetY;
+    const newZoom = Math.max(0.5, Math.min(50, zoom * zoomFactor));
+    panX = mx - (mx - panX) * (newZoom / zoom);
+    panY = my - (my - panY) * (newZoom / zoom);
+    zoom = newZoom;
+    draw();
+  }, { passive: false });
+
+  // Layer toggles
+  document.getElementById('layer-fcu').addEventListener('change', e => { showFCu = e.target.checked; draw(); });
+  document.getElementById('layer-bcu').addEventListener('change', e => { showBCu = e.target.checked; draw(); });
+  document.getElementById('layer-silk').addEventListener('change', e => { showSilk = e.target.checked; draw(); });
+  document.getElementById('zone-gnd').addEventListener('change', e => { showGND = e.target.checked; draw(); });
+  document.getElementById('zone-vbat').addEventListener('change', e => { showVBAT = e.target.checked; draw(); });
+  document.getElementById('zone-5v').addEventListener('change', e => { show5V = e.target.checked; draw(); });
+  document.getElementById('zone-3v3').addEventListener('change', e => { show3V3 = e.target.checked; draw(); });
+
+  // Zoom buttons
+  document.getElementById('zoom-fit').addEventListener('click', fitView);
+  document.getElementById('zoom-in').addEventListener('click', () => {
+    const cx = canvas.width / window.devicePixelRatio / 2;
+    const cy = canvas.height / window.devicePixelRatio / 2;
+    const nz = zoom * 1.5;
+    panX = cx - (cx - panX) * (nz / zoom);
+    panY = cy - (cy - panY) * (nz / zoom);
+    zoom = nz;
+    draw();
+  });
+  document.getElementById('zoom-out').addEventListener('click', () => {
+    const cx = canvas.width / window.devicePixelRatio / 2;
+    const cy = canvas.height / window.devicePixelRatio / 2;
+    const nz = zoom / 1.5;
+    panX = cx - (cx - panX) * (nz / zoom);
+    panY = cy - (cy - panY) * (nz / zoom);
+    zoom = nz;
+    draw();
+  });
+  document.getElementById('zoom-reset').addEventListener('click', fitView);
+
+  window.addEventListener('resize', () => { resize(); draw(); });
+
+  setTimeout(fitView, 50);
+
+  return { fitView, draw };
+})();
+
+// =================================================================
+// BOM
+// =================================================================
+const BOM_DATA = [
+  {comment:"STM32G474RET3",designator:"U1",footprint:"LQFP-64_10x10mm_P0.5mm",lcsc:"C523473",ds:"https://www.st.com/resource/en/datasheet/stm32g474re.pdf"},
+  {comment:"LMR36506MSC5RPERQ1",designator:"U2",footprint:"LMR36503",lcsc:"C2682610",ds:"https://www.ti.com/lit/ds/symlink/lmr36506.pdf"},
+  {comment:"LMR36006FSCQ",designator:"U3",footprint:"LMR36006",lcsc:"DIGIKEY_ONLY",dnp:true},
+  {comment:"TPS62172DSG",designator:"U4",footprint:"WSON-8",lcsc:"C131665",ds:"https://www.ti.com/lit/ds/symlink/tps62172.pdf"},
+  {comment:"LP2992IM5-3.3/NOPB",designator:"U5",footprint:"SOT-23-5",lcsc:"C34065",ds:"https://www.ti.com/lit/ds/symlink/lp2992.pdf"},
+  {comment:"DRV8353FS",designator:"U6",footprint:"WQFN-40",lcsc:"C2682003",ds:"https://www.ti.com/lit/ds/symlink/drv8353r.pdf"},
+  {comment:"AS5047P",designator:"U7",footprint:"TSSOP-14",lcsc:"C473028",ds:"https://ams.com/documents/20143/36005/AS5047P_DS000324_3-00.pdf"},
+  {comment:"TCAN1051HGVDRBRQ1",designator:"U10",footprint:"HVSON-8",lcsc:"C2837498",ds:"https://www.ti.com/lit/ds/symlink/tcan1051hg-q1.pdf"},
+  {comment:"TPW1R306PL,L1Q",designator:"Q1,Q2,Q3,Q4,Q5,Q6",footprint:"2-5S1A",lcsc:"DIGIKEY_ONLY",ds:"https://toshiba.semicon-storage.com/info/TPW1R306PL_datasheet_en_20220527.pdf"},
+  {comment:"PMV90ENER",designator:"Q7,Q8",footprint:"SOT-23-3",lcsc:"C913204"},
+  {comment:"SMBJ51CD-M3/H",designator:"D1,D2",footprint:"D_SMB",lcsc:"C883042"},
+  {comment:"BAT41KFILM",designator:"D3,D4,D5,D6,D7,D8,D9,D10,D11,D14,D15",footprint:"D_SOD-523",lcsc:"C108803"},
+  {comment:"YELLOW LED",designator:"D12",footprint:"LED_SM1206",lcsc:"C2296"},
+  {comment:"GREEN LED",designator:"D13",footprint:"LED_SM1206",lcsc:"C2297"},
+  {comment:"PESD2CANFD24V-UX",designator:"D24,D25",footprint:"SOT-323_SC-70",lcsc:"C2827037"},
+  {comment:"PESD4USB3U-TBSX",designator:"D26",footprint:"SOT1176D",lcsc:"VERIFY_LCSC"},
+  {comment:"22u Inductor",designator:"L1",footprint:"L_Coilcraft_LPS4018",lcsc:"DIGIKEY_ONLY"},
+  {comment:"22u Inductor (DNP)",designator:"L2",footprint:"L_Coilcraft_LPS4018",lcsc:"DIGIKEY_ONLY",dnp:true},
+  {comment:"2u2 Inductor",designator:"L3",footprint:"L_Coilcraft_LPS3314",lcsc:"DIGIKEY_ONLY"},
+  {comment:"1k @ 100MHz Ferrite",designator:"FB1,FB2,FB4",footprint:"R_0805",lcsc:"C1015"},
+  {comment:"1k @ 100MHz Ferrite (DNP)",designator:"FB3",footprint:"R_0805",lcsc:"C1015",dnp:true},
+  {comment:"22R 1%",designator:"R1,R2,R3",footprint:"R_0402",lcsc:"C25092"},
+  {comment:"0R",designator:"R4,R31",footprint:"R_0402",lcsc:"C17168"},
+  {comment:"100k 1% (DNP)",designator:"R5",footprint:"R_0402",lcsc:"C25741",dnp:true},
+  {comment:"9k09 1% (DNP)",designator:"R6",footprint:"R_0402",lcsc:"C25741",dnp:true},
+  {comment:"10k 1%",designator:"R7,R27,R33",footprint:"R_0402",lcsc:"C25744"},
+  {comment:"2k 1%",designator:"R8,R9,R28",footprint:"R_0402",lcsc:"C12135"},
+  {comment:"7R5 1% 1/2W",designator:"R10,R11,R13,R14,R16,R17",footprint:"R_0805",lcsc:"C26025"},
+  {comment:"0m5 1% 2W Shunt",designator:"R12,R15,R18",footprint:"HCS1206FTL500",lcsc:"DIGIKEY_ONLY"},
+  {comment:"100k 1%",designator:"R21,R24,R29",footprint:"R_0402",lcsc:"C25741"},
+  {comment:"100R 1% 1/5W",designator:"R22,R23,R25",footprint:"R_0402",lcsc:"C25076"},
+  {comment:"150R 1% 1/5W",designator:"R26",footprint:"R_0402",lcsc:"C25082"},
+  {comment:"4k7 1%",designator:"R30",footprint:"R_0402",lcsc:"C25900"},
+  {comment:"60R4 1% 1/4W",designator:"R50,R51",footprint:"R_0603",lcsc:"C23192"},
+  {comment:"0R",designator:"R52,R53,R54",footprint:"R_0603",lcsc:"C21189"},
+  {comment:"5R 1% 0.4W",designator:"R55,R56,R57,R58,R59,R60",footprint:"R_0603",lcsc:"C23189"},
+  {comment:"4u7 X7R 16V",designator:"C1,C84",footprint:"C_0603",lcsc:"C19666"},
+  {comment:"1u X7R 10V",designator:"C2,C6,C9,C24",footprint:"C_0402",lcsc:"C52923"},
+  {comment:"100n X7R 50V",designator:"C3,C4,C5,C8,C10,C11,C27,C29,C101,C102,C103,C104,C108,C109,C127,C128",footprint:"C_0402",lcsc:"C307331"},
+  {comment:"4u7 X5R 25V",designator:"C7",footprint:"C_0402",lcsc:"C700651"},
+  {comment:"1n X7R 25V",designator:"C12,C13,C14",footprint:"C_0402",lcsc:"C52717"},
+  {comment:"2u2 X7R 100V",designator:"C15,C16,C17,C20,C45,C52",footprint:"R_0805",lcsc:"C3340953"},
+  {comment:"2u2 X7R 100V (DNP)",designator:"C18",footprint:"R_0805",lcsc:"C3340953",dnp:true},
+  {comment:"100n X7R 100V",designator:"C22,C92",footprint:"C_0603",lcsc:"C2171154"},
+  {comment:"4u7 X7R 100V",designator:"C31,C32,C33,C34,C35,C36,C39,C40,C41,C42,C43,C44,C46,C47,C48,C49,C50,C51,C53,C54,C55,C57,C58,C59,C61,C62,C63,C64,C65,C66,C67,C68,C69,C70,C71,C72,C73,C74,C75,C77,C78,C79,C80,C81,C82,C85,C86,C87",footprint:"C_1206",lcsc:"C2190283"},
+  {comment:"4u7 X7R 100V (DNP)",designator:"C19,C21",footprint:"C_1206",lcsc:"C2190283",dnp:true},
+  {comment:"22u X7R 10V",designator:"C37,C83",footprint:"C_0805",lcsc:"C45783"},
+  {comment:"15u X7R 25V",designator:"C30,C38",footprint:"C_1210",lcsc:"C45783",dnp:true},
+  {comment:"10u X7R 25V",designator:"C56",footprint:"C_0805",lcsc:"C95841"},
+  {comment:"1u X7R 25V",designator:"C60,C88,C93",footprint:"C_0603",lcsc:"C15849"},
+  {comment:"10n X7R 100V",designator:"C76",footprint:"C_0402",lcsc:"VERIFY_LCSC"},
+  {comment:"100n X7R 16V",designator:"C90",footprint:"C_0402",lcsc:"C1525"},
+  {comment:"47n X7R 100V",designator:"C91",footprint:"C_0603",lcsc:"VERIFY_LCSC"},
+  {comment:"1u X7R 6.3V",designator:"C94",footprint:"C_0402",lcsc:"C52923"},
+  {comment:"100n X7R 100V",designator:"C95,C97,C99",footprint:"C_1206",lcsc:"C2836855"},
+  {comment:"4u7 X7R 100V",designator:"C89,C96,C98,C100",footprint:"C_1206",lcsc:"C2190283"},
+  {comment:"220n X7S 100V (DNP)",designator:"C23,C25",footprint:"C_0603",lcsc:"VERIFY_LCSC",dnp:true},
+  {comment:"100n X7R 50V (DNP)",designator:"C26,C28",footprint:"C_0402",lcsc:"C307331",dnp:true},
+  {comment:"4n7 X7R 100V",designator:"C129",footprint:"C_0402",lcsc:"VERIFY_LCSC"},
+  {comment:"1n X7R 1kV",designator:"C130,C131,C132",footprint:"C_0603",lcsc:"VERIFY_LCSC"},
+  {comment:"3n3 X7R 100V",designator:"C133,C134,C135,C136,C137,C138",footprint:"C_0402",lcsc:"VERIFY_LCSC"},
+  {comment:"XT60PW-M",designator:"J2",footprint:"XT60PW-M",lcsc:"C2905422"},
+  {comment:"Phase Pad",designator:"J3,J4,J5",footprint:"Pad_Square_Vias",lcsc:""},
+  {comment:"S2B-PH-SM4-TB",designator:"J8",footprint:"JST_PH",lcsc:"C173752"},
+  {comment:"PTH 01x03 2.54mm",designator:"J11",footprint:"PTH_1x03",lcsc:"C49257"},
+  {comment:"Nano-Fit 1x03",designator:"J12,J13",footprint:"1054301203",lcsc:"DIGIKEY_ONLY"},
+  {comment:"SM05B-GHS-TB",designator:"J14",footprint:"JST_GH",lcsc:"C189898"},
+  {comment:"CAS-220TA DIP Switch",designator:"SW1",footprint:"CAS-220A",lcsc:"DIGIKEY_ONLY"},
+  {comment:"47k 1% NTC",designator:"TH1",footprint:"R_0402",lcsc:"C238446"},
+  {comment:"M3 Mounting Hole",designator:"H1,H2,H3",footprint:"MountingHole_3.2mm",lcsc:""},
+  {comment:"Net Ties",designator:"NT1,NT2,NT3,NT4,NT5,NT6,NT7,NT8,NT9,NT10,NT11,NT12,NT13,NT14",footprint:"NetTie-2_SMD",lcsc:""},
+  {comment:"FB_12V Net Tie (DNP)",designator:"NT2",footprint:"NetTie-2_SMD",lcsc:"",dnp:true}
+];
+
+const BOM_SECTIONS = {
+  "ICs": ["U1","U2","U3","U4","U5","U6","U7","U10"],
+  "Power MOSFETs": ["Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8"],
+  "Input Protection": ["D1","D2","D24","D25","D26"],
+  "Gate Drive": ["R10","R11","R13","R14","R16","R17"],
+  "Current Sensing": ["R12","R15","R18","R55","R56","R57","R58","R59","R60","C133","C134","C135","C136","C137","C138"],
+  "Power Regulation": ["L1","L2","L3","FB1","FB2","FB3","FB4"],
+  "Bulk Capacitors": ["C31","C32","C33","C34","C35","C36","C39","C40","C41","C42","C43","C44","C46","C47","C48","C49","C50","C51","C53","C54","C55","C57","C58","C59","C61","C62","C63","C64","C65","C66","C67","C68","C69","C70","C71","C72","C73","C74","C75","C77","C78","C79","C80","C81","C82","C85","C86","C87","C89","C96","C98","C100","C19","C21"],
+  "MCU Decoupling": ["C1","C2","C3","C4","C5","C6","C7","C8","C9","C10","C11","C101","C102","C103","C104","C108","C109"],
+  "Connectors": ["J2","J3","J4","J5","J8","J11","J12","J13","J14"],
+  "LEDs": ["D12","D13","R21","R22","R23","R24","R25","R26","Q7","Q8"],
+  "Communication": ["R50","R51","SW1","C127","C128","C129"],
+  "Sensing": ["TH1","R27","R28","R29","R30"]
+};
+
+function getQty(designator) {
+  return designator.split(',').filter(d => d.trim()).length;
+}
+
+function renderBOM() {
+  const search = document.getElementById('bom-search').value.toLowerCase();
+  const groupBy = document.getElementById('bom-group').value;
+  const showDnp = document.getElementById('bom-dnp').checked;
+  const tbody = document.getElementById('bom-body');
+  tbody.innerHTML = '';
+
+  const filtered = BOM_DATA.filter(b => {
+    if (b.dnp && !showDnp) return false;
+    if (search) {
+      const hay = (b.comment + ' ' + b.designator + ' ' + b.footprint + ' ' + (b.lcsc || '')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (groupBy === 'section') {
+    Object.entries(BOM_SECTIONS).forEach(([section, refs]) => {
+      const sectionRows = filtered.filter(b => {
+        const desRefs = b.designator.split(',').map(d => d.trim());
+        return desRefs.some(d => refs.includes(d));
+      });
+      if (sectionRows.length === 0) return;
+      const headerRow = document.createElement('tr');
+      headerRow.className = 'bom-section-header';
+      headerRow.innerHTML = '<td colspan="5">' + section + '</td>';
+      tbody.appendChild(headerRow);
+      sectionRows.forEach(b => tbody.appendChild(createBomRow(b)));
+    });
+  } else {
+    filtered.forEach(b => tbody.appendChild(createBomRow(b)));
   }
-  body.innerHTML = html;
 
+  // Stats
+  const activeLines = BOM_DATA.filter(b => !b.dnp).length;
+  const digikeyCount = BOM_DATA.filter(b => b.lcsc === 'DIGIKEY_ONLY' && !b.dnp).length;
+  const lcscCount = BOM_DATA.filter(b => b.lcsc && b.lcsc !== 'DIGIKEY_ONLY' && b.lcsc !== 'VERIFY_LCSC' && b.lcsc !== '' && !b.dnp).length;
   document.getElementById('bom-stats').innerHTML =
-    `<span><span class="stat-num">${rows.length}</span> unique parts</span>` +
-    `<span><span class="stat-num">${totalQty}</span> total components</span>`;
+    '<div class="bom-stat"><div class="num">' + activeLines + '</div><div class="desc">Unique Parts</div></div>' +
+    '<div class="bom-stat"><div class="num">229</div><div class="desc">Total Components</div></div>' +
+    '<div class="bom-stat"><div class="num green">' + lcscCount + '</div><div class="desc">JLCPCB (LCSC)</div></div>' +
+    '<div class="bom-stat"><div class="num amber">' + digikeyCount + '</div><div class="desc">DigiKey Only</div></div>' +
+    '<div class="bom-stat"><div class="num red">15</div><div class="desc">DNP</div></div>';
 }
 
-// Sort
-document.querySelectorAll('#bom-table th').forEach(th => {
+function createBomRow(b) {
+  const tr = document.createElement('tr');
+  if (b.dnp) tr.className = 'dnp-row';
+  const qty = getQty(b.designator);
+  let sourceHtml = '';
+  if (b.ds) {
+    sourceHtml += '<a href="' + b.ds + '" target="_blank" class="lcsc-link" style="margin-right:8px">Datasheet</a>';
+  }
+  if (b.lcsc === 'DIGIKEY_ONLY') {
+    sourceHtml += '<span class="badge-digikey">DIGIKEY</span>';
+  } else if (b.lcsc === 'VERIFY_LCSC') {
+    sourceHtml += '<span class="badge-verify">VERIFY</span>';
+  } else if (b.lcsc && b.lcsc !== '') {
+    sourceHtml += '<a href="https://www.lcsc.com/product-detail/' + b.lcsc + '.html" target="_blank" class="lcsc-link">' + b.lcsc + '</a>';
+  }
+  tr.innerHTML =
+    '<td>' + b.comment + '</td>' +
+    '<td class="ref">' + b.designator + '</td>' +
+    '<td style="font-size:0.75rem;color:var(--text-dim)">' + b.footprint + '</td>' +
+    '<td style="text-align:center">' + qty + '</td>' +
+    '<td>' + sourceHtml + '</td>';
+  return tr;
+}
+
+document.getElementById('bom-search').addEventListener('input', renderBOM);
+document.getElementById('bom-group').addEventListener('change', renderBOM);
+document.getElementById('bom-dnp').addEventListener('change', renderBOM);
+
+// Column sorting
+let sortDir = {};
+document.querySelectorAll('.bom-table th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
-    const col = parseInt(th.dataset.col);
-    if (bomSortCol === col) bomSortAsc = !bomSortAsc;
-    else { bomSortCol = col; bomSortAsc = true; }
-    document.querySelectorAll('#bom-table th').forEach(t => t.classList.remove('sorted'));
-    th.classList.add('sorted');
-    th.querySelector('.sort-arrow').textContent = bomSortAsc ? '\u25B2' : '\u25BC';
-    renderBom(document.getElementById('bom-search').value, bomSortCol, bomSortAsc);
+    const key = th.dataset.sort;
+    sortDir[key] = !sortDir[key];
+    const dir = sortDir[key] ? 1 : -1;
+    BOM_DATA.sort((a, b) => {
+      let va = key === 'qty' ? getQty(a.designator) : (a[key] || '');
+      let vb = key === 'qty' ? getQty(b.designator) : (b[key] || '');
+      if (typeof va === 'number') return (va - vb) * dir;
+      return String(va).localeCompare(String(vb)) * dir;
+    });
+    renderBOM();
   });
 });
 
-// Search
-document.getElementById('bom-search').addEventListener('input', e => {
-  renderBom(e.target.value, bomSortCol, bomSortAsc);
+renderBOM();
+
+// =================================================================
+// SCHEMATICS
+// =================================================================
+const schemContent = document.getElementById('schem-content');
+
+document.querySelectorAll('.schem-btn[data-schem]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.schem-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    schemContent.innerHTML = '<object data="schematics/' + btn.dataset.schem + '.svg" type="image/svg+xml" style="width:100%;height:100%;min-height:500px;background:white;border-radius:0 0 8px 8px;">SVG not available</object>';
+    // Reset zoom buttons
+    document.querySelectorAll('.schem-zoom-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.schem-zoom-btn[data-zoom="fit"]').classList.add('active');
+  });
 });
 
-// Initial render
-renderBom('', 0, true);
+document.querySelectorAll('.schem-btn[data-diagram]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.schem-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const diag = btn.dataset.diagram;
+    if (diag === 'foc-pipeline') {
+      schemContent.innerHTML = '<div class="inline-diagram">' +
+        '<h3 style="color:var(--text-primary);font-size:1.1rem">FOC Pipeline &mdash; TIM1 Update ISR @ 20 kHz</h3>' +
+        '<div class="diagram-foc-pipeline">' +
+        '<div class="foc-block" style="border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,0.08)">ADC<br><span style="font-size:0.6rem;opacity:0.6">Sample</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,0.06)">Clarke<br><span style="font-size:0.6rem;opacity:0.6">abc&rarr;&alpha;&beta;</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,0.06)">Park<br><span style="font-size:0.6rem;opacity:0.6">&alpha;&beta;&rarr;dq</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,0.08)">PI d/q<br><span style="font-size:0.6rem;opacity:0.6">Control</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,0.06)">Inv Park<br><span style="font-size:0.6rem;opacity:0.6">dq&rarr;&alpha;&beta;</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--green);color:var(--green);background:rgba(34,197,94,0.08)">SVPWM<br><span style="font-size:0.6rem;opacity:0.6">Sector</span></div>' +
+        '<div class="foc-arrow">&rarr;</div>' +
+        '<div class="foc-block" style="border-color:var(--text-dim);color:var(--text-secondary);background:rgba(90,100,120,0.08)">PWM<br><span style="font-size:0.6rem;opacity:0.6">TIM1</span></div>' +
+        '</div>' +
+        '<p style="color:var(--text-tertiary);font-size:0.8rem;max-width:600px;text-align:center">CORDIC co-processor accelerates sin/cos for Park transforms. All math in float32, no library calls. Total pipeline: ~5.9&micro;s of 50&micro;s budget.</p>' +
+        '</div>';
+    } else if (diag === 'control-cascade') {
+      schemContent.innerHTML = '<div class="inline-diagram">' +
+        '<h3 style="color:var(--text-primary);font-size:1.1rem">Control Cascade Architecture</h3>' +
+        '<div style="display:flex;justify-content:center;padding:20px">' +
+        '<div style="border:2px solid var(--green);border-radius:14px;padding:20px 28px;text-align:center">' +
+        '<div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--green);font-weight:600">Position Loop @ 1 kHz</div>' +
+        '<div style="margin-top:14px;border:2px solid var(--amber);border-radius:12px;padding:16px 24px">' +
+        '<div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--amber);font-weight:600">Velocity Loop @ 5 kHz</div>' +
+        '<div style="margin-top:12px;border:2px solid var(--cyan);border-radius:10px;padding:14px 20px">' +
+        '<div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--cyan);font-weight:600">Current Loop @ 20 kHz</div>' +
+        '<div style="margin-top:10px;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-dim)">FOC &rarr; SVPWM &rarr; PWM &rarr; Motor</div>' +
+        '</div></div></div></div></div>';
+    } else if (diag === 'layer-stackup') {
+      schemContent.innerHTML = '<div class="inline-diagram">' +
+        '<h3 style="color:var(--text-primary);font-size:1.1rem">6-Layer PCB Stackup &mdash; 1.58mm Total</h3>' +
+        '<div class="layer-stackup">' +
+        '<div class="stackup-layer" style="background:rgba(239,68,68,0.15);color:var(--red)"><span class="sname">F.Cu &mdash; Signal + Power</span><span class="sthick">35&micro;m</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(100,100,100,0.08);color:var(--text-dim)"><span class="sname">Prepreg</span><span class="sthick">0.2mm</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(34,197,94,0.12);color:var(--green)"><span class="sname">In1.Cu &mdash; GND Plane</span><span class="sthick">17.5&micro;m</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(100,100,100,0.05);color:var(--text-dim)"><span class="sname">Core</span><span class="sthick">0.36mm</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(245,158,11,0.12);color:var(--amber)"><span class="sname">In2.Cu &mdash; Power Plane</span><span class="sthick">17.5&micro;m</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(100,100,100,0.08);color:var(--text-dim)"><span class="sname">Prepreg</span><span class="sthick">0.2mm</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(6,182,212,0.12);color:var(--cyan)"><span class="sname">In3.Cu &mdash; Signal Routing</span><span class="sthick">17.5&micro;m</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(100,100,100,0.05);color:var(--text-dim)"><span class="sname">Core</span><span class="sthick">0.36mm</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(34,197,94,0.12);color:var(--green)"><span class="sname">In4.Cu &mdash; GND Plane</span><span class="sthick">17.5&micro;m</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(100,100,100,0.08);color:var(--text-dim)"><span class="sname">Prepreg</span><span class="sthick">0.2mm</span></div>' +
+        '<div class="stackup-layer" style="background:rgba(68,136,255,0.15);color:#4488ff"><span class="sname">B.Cu &mdash; Signal + Power</span><span class="sthick">35&micro;m</span></div>' +
+        '</div></div>';
+    }
+  });
+});
+
+// Schematic zoom
+document.querySelectorAll('.schem-zoom-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.schem-zoom-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const z = btn.dataset.zoom;
+    const obj = schemContent.querySelector('object, .inline-diagram');
+    if (!obj) return;
+    if (z === 'fit') {
+      obj.style.width = '100%';
+    } else {
+      obj.style.width = z + '%';
+    }
+  });
+});
+
 </script>
 </body>
 </html>
